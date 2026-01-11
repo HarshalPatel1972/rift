@@ -1,0 +1,54 @@
+name: Build RIFT
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        check-latest: true
+
+    - name: Install Dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libx11-dev libxtst-dev xorg-dev
+
+    - name: Build
+      shell: bash
+      run: |
+        OS_NAME="${{ matrix.os }}"
+        OUTPUT_NAME="rift-bin"
+        
+        if [[ "$OS_NAME" == "windows-latest" ]]; then
+          OUTPUT_NAME="rift-windows.exe"
+        elif [[ "$OS_NAME" == "macos-latest" ]]; then
+          OUTPUT_NAME="rift-macos"
+        else
+          OUTPUT_NAME="rift-linux"
+        fi
+        
+        echo "Building $OUTPUT_NAME..."
+        go build -v -ldflags="-s -w" -o $OUTPUT_NAME cmd/rift/main.go
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: rift-binaries
+        path: rift-*
