@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RIFT</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #ccc;
+            border: none;
+            outline: none;
+            font-size: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            resize: none;
+            font-family: monospace;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            /* Red */
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .connected {
+            background-color: #22c55e !important;
+            box-shadow: 0 0 10px #22c55e;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="status"></div>
+    <textarea id="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const status = document.getElementById('status');
+        const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+        const ws = new WebSocket(`${scheme}://${window.location.host}/ws`);
+
+        ws.onopen = () => {
+            status.classList.add('connected');
+        };
+        ws.onclose = () => {
+            status.classList.remove('connected');
+        };
+
+        let lastLength = 0;
+
+        // Focus automatically
+        document.body.onclick = () => editor.focus();
+        editor.focus();
+
+        editor.addEventListener('input', (e) => {
+            const currentText = editor.value;
+            const currentLength = currentText.length;
+
+            if (currentLength > lastLength) {
+                // Text added
+                const addedText = currentText.slice(lastLength);
+                ws.send(JSON.stringify({ type: "input", text: addedText }));
+            } else if (currentLength < lastLength) {
+                // Text deleted (Backspace)
+                const diff = lastLength - currentLength;
+                for (let i = 0; i < diff; i++) {
+                    ws.send(JSON.stringify({ type: "key", key: "backspace" }));
+                }
+            }
+            lastLength = currentLength;
+        });
+
+        // Handle Enter key separately as it might not trigger input in some cases or we want explicit control
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent default newline in textarea if we want just the command
+                ws.send(JSON.stringify({ type: "key", key: "enter" }));
+
+                // Optional: mimic newline in editor if we want to keep state in sync visually, 
+                // but usually for "remote control" we might just want to send the key.
+                // For this implementation, let's keep the editor clean or just let it be.
+                // If we preventDefault, 'input' event won't fire for Enter.
+                // So we manually update lastLength if we were inserting a newline, but since we prevented it, we don't.
+            }
+        });
+    </script>
+</body>
+
+</html>
