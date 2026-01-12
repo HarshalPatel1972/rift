@@ -1,54 +1,58 @@
-name: Build RIFT
+name: Distribution Build
 
 on:
   push:
+    tags:
+      - 'v*'
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
+  release:
+    name: Build & Installer (Windows)
+    runs-on: windows-latest
+    
     steps:
-    - name: Check out code
+    - name: Checkout Code
       uses: actions/checkout@v4
 
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.21'
-        check-latest: true
 
-    - name: Install Dependencies (Linux)
-      if: matrix.os == 'ubuntu-latest'
+    - name: Install Tools
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libx11-dev libxtst-dev xorg-dev
+        go install github.com/akavel/rsrc@latest
+        # Makensis is pre-installed on windows-latest
 
-    - name: Build
-      shell: bash
-      run: |
-        OS_NAME="${{ matrix.os }}"
-        OUTPUT_NAME="rift-bin"
-        
-        if [[ "$OS_NAME" == "windows-latest" ]]; then
-          OUTPUT_NAME="rift-windows.exe"
-        elif [[ "$OS_NAME" == "macos-latest" ]]; then
-          OUTPUT_NAME="rift-macos"
-        else
-          OUTPUT_NAME="rift-linux"
-        fi
-        
-        echo "Building $OUTPUT_NAME..."
-        go build -v -ldflags="-s -w" -o $OUTPUT_NAME cmd/rift/main.go
+    - name: Generate Icon
+      run: go run cmd/icon/main.go
 
-    - name: Upload Artifact
+    - name: Embed Resources
+      run: rsrc -manifest rift.manifest -ico app.ico -o rsrc.syso
+
+    - name: Build Binary
+      run: go build -ldflags="-H windowsgui -s -w" -o rift.exe cmd/rift/main.go
+
+    - name: Build Installer
+      run: makensis installer.nsi
+
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: rift-binaries-${{ matrix.os }}
-        path: rift-*
+        name: RIFT-Distribution
+        path: |
+          RIFT_Setup.exe
+          rift.exe
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          RIFT_Setup.exe
+          rift.exe
