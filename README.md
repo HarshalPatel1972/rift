@@ -12,7 +12,7 @@ RIFT turns your smartphone into a secure, high-performance input device for your
 ## ✨ Features
 
 ### 🔌 Zero Friction
-- **No App Required**: Connects via a local web app on your phone.
+- **No Mobile App Required**: Connects via a web app on your phone.
 - **Instant Pairing**: Just scan the QR code to connect.
 - **Local Network**: All data stays within your WiFi. No internet required after loading.
 
