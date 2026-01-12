@@ -26,189 +26,185 @@ const dashboardHTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RIFT</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-font-family:'Manrope',sans-serif;
-min-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-background:#020202;
-background:radial-gradient(circle at 50% 50%,#111 0%,#020202 100%);
-color:#E0E0E0;
+:root {
+  --bg: #030303;
+  --card-bg: #0a0a0a;
+  --border: #222;
+  --text-main: #ededed;
+  --text-muted: #888;
+  --accent: #fff;
+  --success: #00AA55;
 }
-.card{
-max-width:460px;
-width:90%;
-background:#141414;
-border:1px solid rgba(212,175,55,0.2);
-padding:3.5rem 3rem;
-box-shadow:0 20px 50px rgba(0,0,0,0.7);
-opacity:0;
-transform:translateY(30px);
-animation:slideUp 1s ease-out forwards;
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
 }
-@keyframes slideUp{
-to{opacity:1;transform:translateY(0)}
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
-h1{
-font-family:'Playfair Display',serif;
-font-size:2.8em;
-font-weight:700;
-text-align:center;
-letter-spacing:4px;
-color:#E0E0E0;
-margin-bottom:0.5rem;
+/* Subtle top glow */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #333, transparent);
 }
-.tagline{
-text-align:center;
-font-size:0.95em;
-color:#888;
-margin-bottom:3rem;
-letter-spacing:0.5px;
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
 }
-.qr-section{
-opacity:0;
-max-height:0;
-overflow:hidden;
-transition:all 0.7s ease;
-margin:2.5rem 0;
-text-align:center;
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 32px;
 }
-.qr-section.show{
-opacity:1;
-max-height:500px;
+.qr-container {
+  display: none;
+  margin: 24px 0;
+  animation: fadeScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.qr-box{
-display:inline-block;
-padding:1.8rem;
-background:#0a0a0a;
-border:1px solid rgba(212,175,55,0.25);
+.qr-container.visible { display: block; }
+.qr-frame {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  display: inline-block;
 }
-.qr-box img{display:block}
-.conn-info{
-margin-top:1.5rem;
-display:flex;
-align-items:center;
-justify-content:center;
-gap:0.8rem;
-font-size:0.9em;
-color:#999;
+.qr-frame img { display: block; border-radius: 4px; }
+.meta {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
-.amber-dot{
-width:7px;
-height:7px;
-border-radius:50%;
-background:#D4AF37;
-box-shadow:0 0 12px rgba(212,175,55,0.6);
-animation:pulse 2.5s ease-in-out infinite;
+.dot {
+  width: 6px; height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 170, 85, 0.4);
 }
-@keyframes pulse{
-0%,100%{opacity:1}
-50%{opacity:0.3}
+button {
+  width: 100%;
+  height: 48px;
+  background: var(--accent);
+  color: black;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-.btn{
-width:100%;
-padding:1.1rem;
-margin:0.6rem 0;
-font:600 0.75em/1 'Manrope',sans-serif;
-letter-spacing:3px;
-text-transform:uppercase;
-color:#D4AF37;
-background:transparent;
-border:1px solid rgba(212,175,55,0.3);
-cursor:pointer;
-position:relative;
-overflow:hidden;
-transition:all 0.4s ease;
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
-.btn:before{
-content:'';
-position:absolute;
-top:0;
-left:-100%;
-width:100%;
-height:100%;
-background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);
-transition:left 0.5s;
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+  transform: none;
 }
-.btn:hover:before{left:100%}
-.btn:hover{
-border-color:rgba(212,175,55,0.6);
-box-shadow:0 0 25px rgba(212,175,55,0.15);
+#btn-refresh {
+  background: #222;
+  color: white;
+  margin-top: 12px;
+  display: none;
 }
-.btn:disabled{
-opacity:0.3;
-cursor:not-allowed;
+#btn-refresh:hover { background: #333; }
+.status {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #444;
 }
-.btn-alt{
-color:#999;
-border-color:rgba(150,150,150,0.2);
+.url-c {
+  margin-top: 12px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #555;
+  word-break: break-all;
 }
-.status-bar{
-margin-top:2.5rem;
-padding:1rem 0;
-text-align:center;
-font-size:0.9em;
-color:#666;
-border-top:1px solid rgba(255,255,255,0.04);
-}
-.url-display{
-margin-top:1rem;
-padding:0.9rem;
-background:rgba(0,0,0,0.35);
-color:#777;
-font:0.8em/1.4 monospace;
-word-break:break-all;
-text-align:center;
+@keyframes fadeScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>
 </head>
 <body>
-<div class="card">
-<h1>RIFT</h1>
-<p class="tagline">Seamless Connection</p>
-<div class="qr-section" id="qr-area">
-<div class="qr-box">
-<img id="qr" width="250" height="250" alt="QR">
-</div>
-<div class="conn-info">
-<span class="amber-dot"></span>
-<span id="ip-text"></span>
-</div>
-</div>
-<button class="btn" id="init-btn" onclick="init()">INITIALIZE</button>
-<button class="btn btn-alt" id="refresh-btn" onclick="init()" style="display:none">REFRESH</button>
-<div class="status-bar" id="status">Ready</div>
-<div class="url-display" id="url"></div>
-</div>
+  <div class="card">
+    <h1>RIFT</h1>
+    <div class="subtitle">Air Typing Bridge</div>
+
+    <div id="qr-area" class="qr-container">
+      <div class="qr-frame">
+        <img id="qr" width="220" height="220" alt="QR" />
+      </div>
+      <div class="meta">
+        <span class="dot"></span>
+        <span id="ip-display"></span>
+      </div>
+    </div>
+
+    <button id="btn-init" onclick="init()">Connect</button>
+    <button id="btn-refresh" onclick="init()">Regenerate Link</button>
+
+    <div class="status" id="status">Ready</div>
+    <div class="url-c" id="url-text"></div>
+  </div>
+
 <script>
-async function init(){
-const initBtn=document.getElementById('init-btn');
-const refreshBtn=document.getElementById('refresh-btn');
-const qrArea=document.getElementById('qr-area');
-const status=document.getElementById('status');
-initBtn.disabled=true;
-refreshBtn.disabled=true;
-status.textContent='Connecting...';
-try{
-const res=await fetch('/start');
-const data=await res.json();
-document.getElementById('qr').src=data.qr;
-document.getElementById('ip-text').textContent=data.ip;
-document.getElementById('url').textContent=data.url;
-qrArea.classList.add('show');
-status.textContent='Ready';
-initBtn.style.display='none';
-refreshBtn.style.display='block';
-refreshBtn.disabled=false;
-}catch(err){
-status.textContent='Failed';
-initBtn.disabled=false;
-refreshBtn.disabled=false;
-}
+async function init() {
+  const btn = document.getElementById('btn-init');
+  const ref = document.getElementById('btn-refresh');
+  const st = document.getElementById('status');
+  const qrArea = document.getElementById('qr-area');
+  
+  btn.disabled = true;
+  ref.disabled = true;
+  st.textContent = "Connecting...";
+  
+  try {
+    const res = await fetch('/start');
+    const data = await res.json();
+    
+    document.getElementById('qr').src = data.qr;
+    document.getElementById('ip-display').textContent = data.ip;
+    document.getElementById('url-text').textContent = data.url;
+    
+    qrArea.classList.add('visible');
+    
+    btn.style.display = 'none';
+    ref.style.display = 'block';
+    ref.disabled = false;
+    st.textContent = "Connection Active";
+  } catch(e) {
+    st.textContent = "Failed to connect";
+    btn.disabled = false;
+    ref.disabled = false;
+  }
 }
 </script>
 </body>
