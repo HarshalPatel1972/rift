@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"sync"
 	"time"
@@ -29,7 +30,8 @@ const dashboardHTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RIFT | Air Typing Host</title>
+<title>RIFT</title>
+<link rel="icon" type="image/png" href="/favicon">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -133,7 +135,7 @@ h1 {
 }
 
 .qr-stage.active {
-    height: 380px; /* Increased height for link */
+    height: 380px;
     border-bottom: 1px solid var(--border);
 }
 
@@ -445,9 +447,7 @@ async function init() {
     const textEl = document.getElementById('status-text');
     const lightEl = document.getElementById('status-light');
     const linkText = document.getElementById('link-text');
-    const warning = document.getElementById('warning-bar');
     
-    // Reset if previously running
     if(pollInterval) clearInterval(pollInterval);
 
     btn.innerHTML = "ESTABLISHING UPLINK...";
@@ -461,38 +461,32 @@ async function init() {
         linkUrl = data.url;
         linkText.innerHTML = linkUrl;
         
-        // Transitions
         btn.innerHTML = "REGENERATE LINK";
         btn.disabled = false;
         stage.classList.add('active');
         
-        // Initial state logic
         if (data.isLoopback) {
-            warning.style.display = 'block';
             textEl.innerHTML = "OFFLINE MODE";
             lightEl.className = "status-light red";
         } else {
             textEl.innerHTML = "READY TO CONNECT";
-            lightEl.className = "status-light green"; // Green means ready/listening
+            lightEl.className = "status-light green";
         }
 
-        // START POLLING
         pollInterval = setInterval(async () => {
             try {
                 const sRes = await fetch('/status');
                 const sData = await sRes.json();
                 
-                // State Update
                 if(sData.connected) {
-                    if(!connected) { // Edge trigger
-                        connected = true; // Speed up animation
+                    if(!connected) {
+                        connected = true;
                         textEl.innerHTML = "DEVICE CONNECTED";
                         lightEl.className = "status-light green";
-                        // Pulse effect handled by CSS
                     }
                 } else {
-                    if(connected) { // Edge trigger
-                        connected = false; // Slow down animation
+                    if(connected) {
+                        connected = false;
                         textEl.innerHTML = "READY TO CONNECT";
                         lightEl.className = "status-light green";
                     }
@@ -520,53 +514,89 @@ async function copyLink() {
         console.error(e);
     }
 }
+// Clean shutdown when user closes window
+window.addEventListener('beforeunload', () => {
+    navigator.sendBeacon('/shutdown');
+});
 </script>
 </body>
 </html>`
 
-
-
 func main() {
-	// Generate session token
 	sessionToken = uuid.New().String()
 
-	// Start input server on port 8080 in background
 	inputServer = server.New(":8080", sessionToken)
 	
-	// Hook into connection events
 	inputServer.OnConnect = func() {
 		connMu.Lock()
 		isConnected = true
 		connMu.Unlock()
-		log.Println("State update: Client Connected")
+		log.Println("Client Connected")
 	}
 	inputServer.OnDisconnect = func() {
 		connMu.Lock()
 		isConnected = false
 		connMu.Unlock()
-		log.Println("State update: Client Disconnected")
+		log.Println("Client Disconnected")
 	}
 
 	go func() {
-		log.Println("Starting input server on port 8080...")
 		if err := inputServer.Start(); err != nil {
-			log.Fatalf("Input server failed: %v", err)
+			log.Printf("Input server error: %v", err)
 		}
 	}()
 
-	// Setup HTTP dashboard server on port 8081
 	http.HandleFunc("/", serveDashboard)
 	http.HandleFunc("/start", handleStart)
 	http.HandleFunc("/status", handleStatus)
+	http.HandleFunc("/shutdown", handleShutdown)
+	http.HandleFunc("/favicon", serveFavicon)
 
-	// Auto-open browser
+	// Auto-open in App Mode
 	go func() {
 		time.Sleep(500 * time.Millisecond)
-		exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8081").Start()
+		launchAppMode("http://localhost:8081")
 	}()
 
-	fmt.Println("RIFT | Air Typing Host Active @ http://localhost:8081")
+	fmt.Println("RIFT | Air Typing Host @ http://localhost:8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
+}
+
+// launchAppMode opens the URL in Chrome/Edge app mode (no URL bar, looks native)
+func launchAppMode(url string) {
+	// Try Edge first (built-in on Windows 10/11)
+	if path := findBrowser("msedge.exe"); path != "" {
+		exec.Command(path, "--app="+url, "--window-size=600,600").Start()
+		return
+	}
+	// Try Chrome
+	if path := findBrowser("chrome.exe"); path != "" {
+		exec.Command(path, "--app="+url, "--window-size=600,600").Start()
+		return
+	}
+	// Fallback to default browser (no app mode)
+	exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+}
+
+// findBrowser locates Chrome or Edge executable
+func findBrowser(name string) string {
+	// Try system PATH first
+	if path, err := exec.LookPath(name); err == nil {
+		return path
+	}
+	// Check common installation paths
+	commonPaths := []string{
+		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+	}
+	for _, p := range commonPaths {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return ""
 }
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
@@ -583,65 +613,74 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 	connMu.Unlock()
 	
 	w.Header().Set("Content-Type", "application/json")
-	// Prevent caching of status
 	w.Header().Set("Cache-Control", "no-cache")
 	fmt.Fprintf(w, `{"connected":%t}`, status)
 }
 
 func handleStart(w http.ResponseWriter, r *http.Request) {
-	// Get current outbound IP (dynamic)
 	ip := GetOutboundIP()
 	
-	// Check for loopback
 	isLoopback := false
 	if ip == "localhost" || ip == "127.0.0.1" || ip == "::1" {
 		isLoopback = true
 	}
 
-	port := "8080"
-	connectionURL := fmt.Sprintf("http://%s:%s?token=%s", ip, port, sessionToken)
+	connectionURL := fmt.Sprintf("http://%s:8080?token=%s", ip, sessionToken)
 
-	// Generate QR code with current IP
 	qrBytes, err := qrcode.Encode(connectionURL, qrcode.Medium, 280)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	// Convert to data URI
 	qrDataURI := "data:image/png;base64," + base64.StdEncoding.EncodeToString(qrBytes)
 
-	// Return JSON response
 	w.Header().Set("Content-Type", "application/json")
-	// Use manual JSON construction for simplicity in main.go main pkg
 	fmt.Fprintf(w, `{"qr":"%s","url":"%s","ip":"%s","isLoopback":%t}`, qrDataURI, connectionURL, ip, isLoopback)
 }
 
-// GetOutboundIP uses UDP dial trick to find the preferred outbound IP
 func GetOutboundIP() string {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		// Fallback to interface enumeration
 		return GetLocalIP()
 	}
 	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP.String()
+	return conn.LocalAddr().(*net.UDPAddr).IP.String()
 }
 
-// GetLocalIP is the fallback method
 func GetLocalIP() string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "localhost"
 	}
-	for _, address := range addrs {
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
 				return ipnet.IP.String()
 			}
 		}
 	}
 	return "localhost"
+}
+
+// serveFavicon serves the icon.png file
+func serveFavicon(w http.ResponseWriter, r *http.Request) {
+	iconData, err := os.ReadFile("web/icon.png")
+	if err != nil {
+		http.Error(w, "Icon not found", 404)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Write(iconData)
+}
+
+// handleShutdown receives the signal from JS when window closes
+func handleShutdown(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	log.Println("UI closed, shutting down RIFT...")
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		os.Exit(0)
+	}()
 }

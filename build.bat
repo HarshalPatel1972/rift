@@ -13,7 +13,7 @@ rsrc -manifest rift.manifest -o rsrc.syso
 echo [3/4] Building executable...
 set CGO_ENABLED=1
 set PATH=C:\TDM-GCC-64\bin;%PATH%
-go build -ldflags="-H windowsgui -s -w" -o rift.exe cmd\rift\main.go
+go build -ldflags="-H windowsgui -s -w" -o rift.exe ./cmd/rift
 
 echo [4/4] Done!
 echo.

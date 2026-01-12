@@ -1,0 +1,1 @@
+const dashboardHTML = `<!DOCTYPE html>
