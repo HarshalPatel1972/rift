@@ -20,13 +20,13 @@ var (
 )
 
 const dashboardHTML = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RIFT</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -36,192 +36,177 @@ display:flex;
 align-items:center;
 justify-content:center;
 background:#020202;
-background:radial-gradient(circle at center,#111111 0%,#020202 100%);
+background:radial-gradient(circle at 50% 50%,#111 0%,#020202 100%);
 color:#E0E0E0;
 }
-.container{
-max-width:480px;
+.card{
+max-width:460px;
 width:90%;
 background:#141414;
 border:1px solid rgba(212,175,55,0.2);
-border-radius:8px;
 padding:3.5rem 3rem;
 box-shadow:0 20px 50px rgba(0,0,0,0.7);
 opacity:0;
-transform:translateY(20px);
-animation:fadeInUp 0.8s ease-out forwards;
+transform:translateY(30px);
+animation:slideUp 1s ease-out forwards;
 }
-@keyframes fadeInUp{
+@keyframes slideUp{
 to{opacity:1;transform:translateY(0)}
 }
 h1{
 font-family:'Playfair Display',serif;
-font-size:3em;
+font-size:2.8em;
 font-weight:700;
 text-align:center;
-color:#E0E0E0;
 letter-spacing:4px;
-margin-bottom:0.3rem;
+color:#E0E0E0;
+margin-bottom:0.5rem;
 }
-.subtitle{
+.tagline{
 text-align:center;
+font-size:0.95em;
 color:#888;
-font-size:0.9em;
 margin-bottom:3rem;
-font-weight:400;
-letter-spacing:1px;
+letter-spacing:0.5px;
 }
-#qr-container{
-margin:2.5rem 0;
-text-align:center;
+.qr-section{
 opacity:0;
 max-height:0;
 overflow:hidden;
-transition:all 0.6s cubic-bezier(0.4,0,0.2,1);
+transition:all 0.7s ease;
+margin:2.5rem 0;
+text-align:center;
 }
-#qr-container.visible{
+.qr-section.show{
 opacity:1;
-max-height:600px;
+max-height:500px;
 }
-.qr-frame{
+.qr-box{
 display:inline-block;
-padding:1.5rem;
+padding:1.8rem;
 background:#0a0a0a;
-border:1px solid rgba(212,175,55,0.3);
-border-radius:4px;
-box-shadow:inset 0 0 20px rgba(0,0,0,0.5);
+border:1px solid rgba(212,175,55,0.25);
 }
-#qr-container img{
-display:block;
-}
-.ip-info{
+.qr-box img{display:block}
+.conn-info{
+margin-top:1.5rem;
 display:flex;
 align-items:center;
 justify-content:center;
-gap:0.7rem;
-margin-top:1.5rem;
-font-size:0.85em;
+gap:0.8rem;
+font-size:0.9em;
 color:#999;
-font-weight:500;
 }
-.status-dot{
-width:6px;
-height:6px;
+.amber-dot{
+width:7px;
+height:7px;
 border-radius:50%;
 background:#D4AF37;
-box-shadow:0 0 10px rgba(212,175,55,0.5);
-animation:breathe 2s ease-in-out infinite;
+box-shadow:0 0 12px rgba(212,175,55,0.6);
+animation:pulse 2.5s ease-in-out infinite;
 }
-@keyframes breathe{
+@keyframes pulse{
 0%,100%{opacity:1}
-50%{opacity:0.4}
+50%{opacity:0.3}
 }
-button{
+.btn{
 width:100%;
-background:transparent;
-border:1px solid rgba(212,175,55,0.4);
-color:#D4AF37;
-padding:1rem 2rem;
-font-size:0.8em;
-font-family:inherit;
-font-weight:600;
-cursor:pointer;
-border-radius:4px;
-transition:all 0.3s ease;
-letter-spacing:2px;
+padding:1.1rem;
+margin:0.6rem 0;
+font:600 0.75em/1 'Manrope',sans-serif;
+letter-spacing:3px;
 text-transform:uppercase;
-margin:0.5rem 0;
+color:#D4AF37;
+background:transparent;
+border:1px solid rgba(212,175,55,0.3);
+cursor:pointer;
 position:relative;
 overflow:hidden;
+transition:all 0.4s ease;
 }
-button::before{
+.btn:before{
 content:'';
 position:absolute;
-inset:0;
-background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.05));
-opacity:0;
-transition:opacity 0.3s;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);
+transition:left 0.5s;
 }
-button:hover::before{
-opacity:1;
+.btn:hover:before{left:100%}
+.btn:hover{
+border-color:rgba(212,175,55,0.6);
+box-shadow:0 0 25px rgba(212,175,55,0.15);
 }
-button:hover{
-border-color:rgba(212,175,55,0.7);
-box-shadow:0 0 20px rgba(212,175,55,0.2);
-}
-button:disabled{
+.btn:disabled{
 opacity:0.3;
 cursor:not-allowed;
 }
-#refresh{
-border-color:rgba(150,150,150,0.3);
-color:#888;
+.btn-alt{
+color:#999;
+border-color:rgba(150,150,150,0.2);
 }
-#refresh:hover{
-border-color:rgba(150,150,150,0.5);
-}
-#status{
+.status-bar{
+margin-top:2.5rem;
+padding:1rem 0;
 text-align:center;
-margin-top:2rem;
-font-size:0.85em;
+font-size:0.9em;
 color:#666;
-padding:0.8rem;
-border-top:1px solid rgba(255,255,255,0.05);
-font-weight:400;
+border-top:1px solid rgba(255,255,255,0.04);
 }
-#url{
+.url-display{
 margin-top:1rem;
-font-size:0.75em;
+padding:0.9rem;
+background:rgba(0,0,0,0.35);
+color:#777;
+font:0.8em/1.4 monospace;
 word-break:break-all;
 text-align:center;
-padding:0.8rem;
-background:rgba(0,0,0,0.3);
-border-radius:4px;
-color:#777;
-font-family:monospace;
 }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="card">
 <h1>RIFT</h1>
-<div class="subtitle">Seamless Connection</div>
-<div id="qr-container">
-<div class="qr-frame">
-<img id="qr" src="" alt="Connection Code" width="260" height="260"/>
+<p class="tagline">Seamless Connection</p>
+<div class="qr-section" id="qr-area">
+<div class="qr-box">
+<img id="qr" width="250" height="250" alt="QR">
 </div>
-<div class="ip-info">
-<span class="status-dot"></span>
-<span><span id="current-ip"></span></span>
+<div class="conn-info">
+<span class="amber-dot"></span>
+<span id="ip-text"></span>
 </div>
 </div>
-<button id="generate" onclick="generate()">INITIALIZE</button>
-<button id="refresh" onclick="generate()" style="display:none">↻ RECONNECT</button>
-<div id="status">Ready</div>
-<div id="url"></div>
+<button class="btn" id="init-btn" onclick="init()">INITIALIZE</button>
+<button class="btn btn-alt" id="refresh-btn" onclick="init()" style="display:none">REFRESH</button>
+<div class="status-bar" id="status">Ready</div>
+<div class="url-display" id="url"></div>
 </div>
 <script>
-async function generate(){
-const btn=document.getElementById('generate');
-const refreshBtn=document.getElementById('refresh');
-const qrContainer=document.getElementById('qr-container');
-btn.disabled=true;
+async function init(){
+const initBtn=document.getElementById('init-btn');
+const refreshBtn=document.getElementById('refresh-btn');
+const qrArea=document.getElementById('qr-area');
+const status=document.getElementById('status');
+initBtn.disabled=true;
 refreshBtn.disabled=true;
-document.getElementById('status').textContent='Establishing connection...';
+status.textContent='Connecting...';
 try{
 const res=await fetch('/start');
 const data=await res.json();
 document.getElementById('qr').src=data.qr;
-qrContainer.classList.add('visible');
+document.getElementById('ip-text').textContent=data.ip;
 document.getElementById('url').textContent=data.url;
-document.getElementById('current-ip').textContent=data.ip;
-document.getElementById('status').textContent='Connected';
-btn.style.display='none';
+qrArea.classList.add('show');
+status.textContent='Ready';
+initBtn.style.display='none';
 refreshBtn.style.display='block';
 refreshBtn.disabled=false;
-}catch(e){
-document.getElementById('status').textContent='Connection failed';
-btn.disabled=false;
+}catch(err){
+status.textContent='Failed';
+initBtn.disabled=false;
 refreshBtn.disabled=false;
 }
 }
