@@ -1,7 +1,7 @@
 Add-Type -AssemblyName System.Drawing
 
 $srcPath = "$PSScriptRoot\web\icon.png"
-$destPath = "$PSScriptRoot\cmd\rift\app.ico"
+$destPath = "$PSScriptRoot\cmd\rift\rift.ico"
 $size = 256
 
 try {

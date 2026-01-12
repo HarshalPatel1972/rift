@@ -9,7 +9,7 @@ go install github.com/akavel/rsrc@latest
 
 echo [2/4] Embedding manifest...
 cd cmd/rift
-rsrc -manifest ../../rift.manifest -ico app.ico -o rsrc.syso
+rsrc -manifest ../../rift.manifest -ico rift.ico -o rsrc.syso
 cd ../..
 
 echo [3/4] Building executable...
