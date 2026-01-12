@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os/exec"
+	"sync"
 	"time"
 
 	"github.com/HarshalPatel1972/rift/internal/server"
@@ -17,6 +18,10 @@ import (
 var (
 	inputServer  *server.Server
 	sessionToken string
+	
+	// Connection state
+	connMu      sync.Mutex
+	isConnected bool
 )
 
 const dashboardHTML = `<!DOCTYPE html>
@@ -24,410 +29,502 @@ const dashboardHTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RIFT</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<title>RIFT | Air Typing Host</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #030303;
-  --card-bg: #0a0a0a;
-  --border: #222;
-  --text-main: #ededed;
-  --text-muted: #888;
-  --accent: #fff;
-  --success: #00AA55;
-  --error: #FF3333;
-  --warning: #FFCC00;
+    --bg: #050505;
+    --card-bg: rgba(12, 12, 12, 0.95);
+    --border: rgba(255, 255, 255, 0.08);
+    --accent-cyan: #00F0FF;
+    --accent-green: #00FF9D;
+    --accent-red: #FF3333;
+    --text-main: #ECECEC;
+    --text-muted: #888;
 }
+
 * { margin:0; padding:0; box-sizing:border-box; }
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg);
-  color: var(--text-main);
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: 'Space Grotesk', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
 }
+
 canvas {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 0;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
 }
-.card {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 520px;
-  background: rgba(10, 10, 10, 0.9);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 48px;
-  box-shadow: 0 4px 40px rgba(0,0,0,0.6);
-  text-align: center;
-  opacity: 0; /* Handled by anime.js */
+
+/* --- Monolith Card --- */
+.monolith {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 400px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
-.card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+
+.monolith::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    opacity: 0.5;
 }
-h1 {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  letter-spacing: -1px;
-}
-.subtitle {
-  color: var(--text-muted);
-  font-size: 15px;
-  margin-bottom: 32px;
-}
-.qr-container {
-  display: block; /* Setup for animation */
-  margin: 32px 0;
-  opacity: 0;
-}
-.qr-frame {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  display: inline-block;
-  box-shadow: 0 0 20px rgba(255,255,255,0.1);
-  transform: scale(0.9);
-}
-.qr-frame img { display: block; border-radius: 6px; }
-.meta {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-.dot {
-  width: 8px; height: 8px;
-  background: var(--success);
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0, 170, 85, 0.6);
-}
-button {
-  width: 100%;
-  height: 56px;
-  background: var(--accent);
-  color: black;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 8px;
-}
-button:hover { opacity: 0.9; transform: scale(1.02); }
-button:disabled { opacity: 0.5; cursor: wait; transform: none; }
-#btn-refresh {
-  background: rgba(255,255,255,0.08);
-  color: white;
-  margin-top: 16px;
-  display: none;
-}
-#btn-refresh:hover { background: rgba(255,255,255,0.12); }
-.status {
-  margin-top: 32px;
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-}
-.url-c {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: 'Fira Code', monospace;
-  font-size: 12px;
-  color: #555;
-  background: rgba(0,0,0,0.3);
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-  opacity: 0;
-}
-.url-c:hover {
-  background: rgba(255,255,255,0.05);
-  color: #888;
-}
-.copy-icon { opacity: 0.6; font-size: 14px; }
-.warning-box {
-    display: none;
-    margin-top: 16px;
-    padding: 12px;
-    background: rgba(255, 204, 0, 0.1);
-    border: 1px solid rgba(255, 204, 0, 0.2);
-    border-radius: 8px;
-    color: var(--warning);
-    font-size: 13px;
+
+/* Header Section */
+.header {
+    padding: 32px 32px 24px;
     text-align: center;
+    background: rgba(255,255,255,0.01);
+    border-bottom: 1px solid var(--border);
 }
+
+h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    background: linear-gradient(to bottom, #fff, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+}
+
+/* Content Area */
+.content {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* QR Scanning Bracket */
+.qr-stage {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.qr-stage.active {
+    height: 380px; /* Increased height for link */
+    border-bottom: 1px solid var(--border);
+}
+
+.scanner-frame {
+    width: 200px;
+    height: 200px;
+    margin: 30px auto 16px;
+    position: relative;
+    padding: 10px;
+}
+
+.scanner-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 2px;
+    opacity: 0.9;
+}
+
+/* Corner Brackets */
+.corner {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--accent-cyan);
+    border-style: solid;
+    transition: all 0.3s;
+}
+.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+.qr-stage.active .corner {
+    animation: scanPulse 2s infinite;
+}
+
+/* Copy Link Box */
+.link-box {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    max-width: 80%;
+}
+.link-box:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--accent-cyan);
+}
+.link-text {
+    font-family: monospace;
+    font-size: 10px;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+.link-icon { font-size: 12px; opacity: 0.7; }
+
+/* Status Row */
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.status-light {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #333;
+    transition: all 0.3s;
+}
+
+.status-light.green {
+    background: var(--accent-green);
+    box-shadow: 0 0 10px var(--accent-green);
+    animation: pulseGreen 2s infinite;
+}
+.status-light.red {
+    background: var(--accent-red);
+    box-shadow: 0 0 10px var(--accent-red);
+    animation: pulseRed 2s infinite;
+}
+
+.status-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+/* Glass-Gold Button */
+.action-area { padding: 0; }
+
+button {
+    width: 100%;
+    height: 64px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+    overflow: hidden;
+}
+
+button:hover {
+    background: rgba(255,255,255,0.03);
+    color: var(--accent-cyan);
+}
+
+button::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+/* Animations */
+@keyframes shimmer {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+}
+
+@keyframes scanPulse {
+    0% { border-color: var(--accent-cyan); box-shadow: 0 0 0 var(--accent-cyan); }
+    50% { border-color: #fff; box-shadow: 0 0 10px var(--accent-cyan); }
+    100% { border-color: var(--accent-cyan); box-shadow: 0 0 0 var(--accent-cyan); }
+}
+
+@keyframes pulseGreen {
+    0% { opacity: 0.6; } 50% { opacity: 1; box-shadow: 0 0 15px var(--accent-green); } 100% { opacity: 0.6; }
+}
+@keyframes pulseRed {
+    0% { opacity: 0.6; } 50% { opacity: 1; box-shadow: 0 0 15px var(--accent-red); } 100% { opacity: 0.6; }
+}
+
 </style>
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
-  <div class="card" id="main-card">
-    <h1>RIFT</h1>
-    <div class="subtitle">Air Typing Bridge</div>
 
-    <div id="qr-area" class="qr-container">
-      <div class="qr-frame" id="qr-frame">
-        <img id="qr" width="240" height="240" alt="QR" />
-      </div>
-      <div class="meta">
-        <span class="dot" id="status-dot"></span>
-        <span id="ip-display"></span>
-      </div>
+<canvas id="nerve-canvas"></canvas>
+
+<div class="monolith">
+    <div class="header">
+        <h1>RIFT</h1>
+        <div class="subtitle">Air Typing Host</div>
     </div>
 
-    <div id="network-warning" class="warning-box">
-        ⚠️ <strong>Offline Mode</strong><br/>
-        Connect to Wi-Fi to use Air Typing from other devices.
-    </div>
+    <div class="content">
+        <!-- QR Stage (Hidden by default) -->
+        <div id="qr-stage" class="qr-stage">
+            <div class="scanner-frame">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+                <img id="qr" alt="Data Link">
+            </div>
 
-    <button id="btn-init" onclick="init()">Connect Device</button>
-    <button id="btn-refresh" onclick="init()">Generate New Link</button>
+            <!-- Manually Copy Link -->
+            <div class="link-box" onclick="copyLink()">
+                <span class="link-text" id="link-text"></span>
+                <span class="link-icon">📋</span>
+                <span id="copy-feedback" style="display:none;font-size:10px;color:var(--accent-green)">COPIED!</span>
+            </div>
 
-    <div class="status" id="status">Secure P2P Connection</div>
-    
-    <div class="url-c" id="url-container" onclick="copyLink()" title="Click to Copy">
-        <span id="url-text"></span>
-        <span class="copy-icon">📋</span>
+            <div class="status-row">
+                <div id="status-light" class="status-light"></div>
+                <div id="status-text" class="status-text">INITIALIZING...</div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="action-area">
+            <button id="main-btn" onclick="init()">Connect Device</button>
+        </div>
     </div>
-  </div>
+</div>
 
 <script>
-// --- Anime.js Classy Network Animation ---
-const canvas = document.getElementById('bg-canvas');
+// --- ENGINE: THE DIGITAL NERVE ---
+const canvas = document.getElementById('nerve-canvas');
 const ctx = canvas.getContext('2d');
 let w, h;
-let particles = [];
+let strands = [];
+let packets = [];
+let connected = false;
 
 function resize() {
-  w = window.innerWidth;
-  h = window.innerHeight;
-  canvas.width = w;
-  canvas.height = h;
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    initStrands();
 }
 window.addEventListener('resize', resize);
-resize();
 
-// Particle System
-const bgTimeline = anime.timeline({
-    loop: true,
-    easing: 'linear'
-});
-
-function createParticles() {
-    particles = [];
-    const count = Math.min((w * h) / 15000, 100); // Responsive density
+class Strand {
+    constructor(y) {
+        this.y = y;
+        this.phase = Math.random() * Math.PI * 2;
+        this.speed = 0.0005 + Math.random() * 0.001;
+        this.amplitude = 30 + Math.random() * 50;
+    }
     
-    for(let i=0; i<count; i++) {
-        particles.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            r: Math.random() * 2 + 1,
-            alpha: Math.random() * 0.3 + 0.1,
-            vx: (Math.random() - 0.5) * 0.5, // Slow float
-            vy: (Math.random() - 0.5) * 0.5
-        });
+    getY(x) {
+        return this.y + 
+               Math.sin(x * 0.002 + this.phase) * this.amplitude + 
+               Math.sin(x * 0.005 - this.phase) * (this.amplitude * 0.5);
+    }
+
+    update() {
+        this.phase += connected ? this.speed * 4 : this.speed;
     }
 }
-createParticles();
 
-// Render Loop
-function render() {
-    ctx.clearRect(0,0,w,h);
-    
-    // Draw connections
-    ctx.lineWidth = 1;
-    for(let i=0; i<particles.length; i++) {
-        let p1 = particles[i];
-        
-        // Update position
-        p1.x += p1.vx;
-        p1.y += p1.vy;
-        
-        // Bounce off edges
-        if(p1.x < 0 || p1.x > w) p1.vx *= -1;
-        if(p1.y < 0 || p1.y > h) p1.vy *= -1;
-        
-        // Draw Dot
-        ctx.beginPath();
-        ctx.arc(p1.x, p1.y, p1.r, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(255,255,255,' + p1.alpha + ')';
-        ctx.fill();
-        
-        // Connect to neighbors
-        for(let j=i+1; j<particles.length; j++) {
-            let p2 = particles[j];
-            let dist = Math.hypot(p1.x-p2.x, p1.y-p2.y);
-            
-            if(dist < 120) {
-                ctx.beginPath();
-                ctx.moveTo(p1.x, p1.y);
-                ctx.lineTo(p2.x, p2.y);
-                let alpha = (1 - dist/120) * 0.15; // Fade out by distance
-                ctx.strokeStyle = 'rgba(255,255,255,' + alpha + ')';
-                ctx.stroke();
-            }
+class Packet {
+    constructor(strand) {
+        this.strand = strand;
+        this.x = Math.random() * w;
+        this.size = Math.random() * 2 + 1;
+        this.speed = 2 + Math.random() * 3;
+        this.color = Math.random() > 0.5 ? '#00F0FF' : '#BD00FF'; 
+    }
+
+    update() {
+        this.x += connected ? this.speed * 2.5 : this.speed;
+        if(this.x > w) {
+            this.x = -10;
+            this.strand = strands[Math.floor(Math.random() * strands.length)];
         }
     }
-    requestAnimationFrame(render);
-}
-render();
 
-// --- UI Animations (Anime.js) ---
-
-// Entrance Animation
-anime.timeline()
-.add({
-    targets: '#main-card',
-    opacity: [0, 1],
-    translateY: [40, 0],
-    scale: [0.96, 1],
-    duration: 1200,
-    easing: 'cubicBezier(0.16, 1, 0.3, 1)'
-});
-
-// Pulse Status Dot
-anime({
-    targets: '#status-dot',
-    scale: [1, 1.4],
-    opacity: [0.8, 0.4],
-    easing: 'easeInOutSine',
-    duration: 1500,
-    direction: 'alternate',
-    loop: true
-});
-
-// --- Logic ---
-let currentURL = "";
-
-async function copyLink() {
-    if(!currentURL) return;
-    try {
-        await navigator.clipboard.writeText(currentURL);
-        const st = document.getElementById('status');
-        const original = st.textContent;
-        st.textContent = "✅ Link Copied!";
-        st.style.color = "#00AA55";
-        
-        anime({
-            targets: st,
-            translateY: [-2, 0],
-            duration: 300,
-            easing: 'easeOutElastic(1, .8)'
-        });
-        
-        setTimeout(() => {
-            st.textContent = original;
-            st.style.color = "#666";
-        }, 2000);
-    } catch(e) {
-        alert("Could not copy link: " + currentURL);
+    draw() {
+        const y = this.strand.getY(this.x);
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.color;
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(this.x, y, this.size, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
     }
 }
+
+function initStrands() {
+    strands = [];
+    const count = 5;
+    const spacing = h / count;
+    for(let i=0; i<count + 2; i++) {
+        strands.push(new Strand(i * spacing));
+    }
+    packets = [];
+    for(let i=0; i<20; i++) {
+        packets.push(new Packet(strands[i % strands.length]));
+    }
+}
+
+function animate() {
+    ctx.fillStyle = "#050505";
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.lineWidth = 1;
+    strands.forEach(s => {
+        s.update();
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(100, 100, 100, 0.2)";
+        for(let x=0; x<w; x+=10) {
+            const y = s.getY(x);
+            if(x==0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    });
+
+    packets.forEach(p => {
+        p.update();
+        p.draw();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+resize();
+animate();
+
+// --- LOGIC ---
+let linkUrl = "";
+let pollInterval;
 
 async function init() {
-  const btn = document.getElementById('btn-init');
-  const ref = document.getElementById('btn-refresh');
-  const st = document.getElementById('status');
-  const qrArea = document.getElementById('qr-area');
-  const qrFrame = document.getElementById('qr-frame');
-  const warning = document.getElementById('network-warning');
-  const urlContainer = document.getElementById('url-container');
-  
-  btn.disabled = true;
-  ref.disabled = true;
-  st.textContent = "Negotiating...";
-  warning.style.display = 'none';
-  
-  // Button Click Effect
-  anime({
-      targets: btn,
-      scale: [1, 0.96],
-      duration: 100,
-      direction: 'alternate',
-      easing: 'easeInOutQuad'
-  });
-  
-  try {
-    const res = await fetch('/start');
-    const data = await res.json();
+    const btn = document.getElementById('main-btn');
+    const stage = document.getElementById('qr-stage');
+    const textEl = document.getElementById('status-text');
+    const lightEl = document.getElementById('status-light');
+    const linkText = document.getElementById('link-text');
+    const warning = document.getElementById('warning-bar');
     
-    document.getElementById('qr').src = data.qr;
-    document.getElementById('ip-display').textContent = data.ip;
-    document.getElementById('url-text').textContent = data.url;
-    currentURL = data.url;
-    
-    if (data.isLoopback) {
-        warning.style.display = 'block';
-        st.textContent = "⚠️ Offline Mode";
-    } else {
-        st.textContent = "Signal Active";
-    }
+    // Reset if previously running
+    if(pollInterval) clearInterval(pollInterval);
 
-    // New Reveal Animation
-    btn.style.display = 'none';
-    ref.style.display = 'block';
-    ref.disabled = false;
-    urlContainer.style.display = 'flex';
-    
-    anime.timeline()
-    .add({
-        targets: qrArea,
-        opacity: [0, 1],
-        duration: 800,
-        easing: 'easeOutQuad'
-    })
-    .add({
-        targets: qrFrame,
-        scale: [0.8, 1],
-        rotate: [-2, 0],
-        duration: 1000,
-        easing: 'easeOutElastic(1, .8)'
-    }, '-=600')
-    .add({
-        targets: urlContainer,
-        opacity: [0, 1],
-        translateY: [10, 0],
-        duration: 600,
-        easing: 'easeOutQuad'
-    }, '-=800');
-    
-  } catch(e) {
-    st.textContent = "Failed: " + e.message;
-    btn.disabled = false;
-    ref.disabled = false;
-  }
+    btn.innerHTML = "ESTABLISHING UPLINK...";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/start');
+        const data = await res.json();
+        
+        document.getElementById('qr').src = data.qr;
+        linkUrl = data.url;
+        linkText.innerHTML = linkUrl;
+        
+        // Transitions
+        btn.innerHTML = "REGENERATE LINK";
+        btn.disabled = false;
+        stage.classList.add('active');
+        
+        // Initial state logic
+        if (data.isLoopback) {
+            warning.style.display = 'block';
+            textEl.innerHTML = "OFFLINE MODE";
+            lightEl.className = "status-light red";
+        } else {
+            textEl.innerHTML = "READY TO CONNECT";
+            lightEl.className = "status-light green"; // Green means ready/listening
+        }
+
+        // START POLLING
+        pollInterval = setInterval(async () => {
+            try {
+                const sRes = await fetch('/status');
+                const sData = await sRes.json();
+                
+                // State Update
+                if(sData.connected) {
+                    if(!connected) { // Edge trigger
+                        connected = true; // Speed up animation
+                        textEl.innerHTML = "DEVICE CONNECTED";
+                        lightEl.className = "status-light green";
+                        // Pulse effect handled by CSS
+                    }
+                } else {
+                    if(connected) { // Edge trigger
+                        connected = false; // Slow down animation
+                        textEl.innerHTML = "READY TO CONNECT";
+                        lightEl.className = "status-light green";
+                    }
+                }
+            } catch(e) {
+                console.error("Poll failed", e);
+            }
+        }, 1000);
+
+    } catch(e) {
+        btn.innerHTML = "CONNECTION FAILED";
+        btn.disabled = false;
+        alert(e);
+    }
 }
-// Init hidden
-document.getElementById('url-container').style.display = 'none';
+
+async function copyLink() {
+    if(!linkUrl) return;
+    try {
+        await navigator.clipboard.writeText(linkUrl);
+        const fb = document.getElementById('copy-feedback');
+        fb.style.display = 'inline';
+        setTimeout(() => fb.style.display = 'none', 2000);
+    } catch(e) {
+        console.error(e);
+    }
+}
 </script>
 </body>
 </html>`
+
+
 
 func main() {
 	// Generate session token
@@ -435,6 +532,21 @@ func main() {
 
 	// Start input server on port 8080 in background
 	inputServer = server.New(":8080", sessionToken)
+	
+	// Hook into connection events
+	inputServer.OnConnect = func() {
+		connMu.Lock()
+		isConnected = true
+		connMu.Unlock()
+		log.Println("State update: Client Connected")
+	}
+	inputServer.OnDisconnect = func() {
+		connMu.Lock()
+		isConnected = false
+		connMu.Unlock()
+		log.Println("State update: Client Disconnected")
+	}
+
 	go func() {
 		log.Println("Starting input server on port 8080...")
 		if err := inputServer.Start(); err != nil {
@@ -445,6 +557,7 @@ func main() {
 	// Setup HTTP dashboard server on port 8081
 	http.HandleFunc("/", serveDashboard)
 	http.HandleFunc("/start", handleStart)
+	http.HandleFunc("/status", handleStatus)
 
 	// Auto-open browser
 	go func() {
@@ -452,7 +565,7 @@ func main() {
 		exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8081").Start()
 	}()
 
-	fmt.Println("RIFT Dashboard (Combined Updates) starting at http://localhost:8081")
+	fmt.Println("RIFT | Air Typing Host Active @ http://localhost:8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
@@ -462,6 +575,17 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
 	w.Write([]byte(dashboardHTML))
+}
+
+func handleStatus(w http.ResponseWriter, r *http.Request) {
+	connMu.Lock()
+	status := isConnected
+	connMu.Unlock()
+	
+	w.Header().Set("Content-Type", "application/json")
+	// Prevent caching of status
+	w.Header().Set("Cache-Control", "no-cache")
+	fmt.Fprintf(w, `{"connected":%t}`, status)
 }
 
 func handleStart(w http.ResponseWriter, r *http.Request) {
