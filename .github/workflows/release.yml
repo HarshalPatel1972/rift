@@ -27,7 +27,8 @@ jobs:
     - name: Install Tools
       run: |
         go install github.com/akavel/rsrc@latest
-        # Makensis is pre-installed on windows-latest
+        choco install nsis
+        echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
 
     - name: Generate Icon
       run: go run cmd/icon/main.go
