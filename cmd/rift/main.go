@@ -218,11 +218,46 @@ func updateTrayTooltip(msg string) {
 
 func openBrowser() {
 	if assignedPort == 0 {
-		return // Should not happen if started correct
+		return
 	}
 	url := fmt.Sprintf("http://localhost:%d", assignedPort)
+
+	// Try to locate Edge or Chrome to launch in "App Mode" (No URL bar)
+	// 1. Edge (Built-in on Windows 10/11)
+	if path := findExecutable("msedge.exe"); path != "" {
+		exec.Command(path, "--app="+url).Start()
+		return
+	}
+	// 2. Chrome
+	if path := findExecutable("chrome.exe"); path != "" {
+		exec.Command(path, "--app="+url).Start()
+		return
+	}
+
+	// 3. Fallback to default system browser
 	exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 }
+
+func findExecutable(name string) string {
+	path, err := exec.LookPath(name)
+	if err == nil {
+		return path
+	}
+	// Check common locations if not in PATH
+	commonPaths := []string{
+		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+	}
+	for _, p := range commonPaths {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return ""
+}
+
 
 func checkForUpdates() {
 	repoURL := "https://github.com/HarshalPatel1972/rift/releases/latest"
