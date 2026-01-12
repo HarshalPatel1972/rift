@@ -5,7 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-000000?style=flat-square)
 ![Go](https://img.shields.io/badge/backend-Go-000000?style=flat-square)
 
-RIFT turns your smartphone into a secure, high-performance input device for your PC. No apps to install, no bluetooth pairing, no cloud servers. Just pure local-network speed.
+RIFT turns your smartphone into a secure, high-performance input device for your PC. No mobile apps to install, no bluetooth pairing, no cloud servers. Just pure local-network speed.
 
 ---
 
