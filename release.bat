@@ -25,4 +25,3 @@ echo ===================================
 echo DONE! 
 echo Installer created: RIFT_Setup.exe
 echo ===================================
-pause

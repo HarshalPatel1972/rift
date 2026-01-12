@@ -81,6 +81,9 @@ section "install"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoModify" 1
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoRepair" 1
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+
+	# Add Windows Firewall Rule
+	nsExec::Exec 'netsh advfirewall firewall add rule name="${APPNAME}" dir=in action=allow program="$INSTDIR\rift.exe" enable=yes'
 sectionEnd
 
 # Uninstaller
@@ -113,4 +116,7 @@ section "uninstall"
 
 	# Remove uninstaller information from the registry
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
+
+	# Remove Windows Firewall Rule
+	nsExec::Exec 'netsh advfirewall firewall delete rule name="${APPNAME}" program="$INSTDIR\rift.exe"'
 sectionEnd
