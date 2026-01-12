@@ -8,20 +8,27 @@ import (
 	"net/http"
 	"os/exec"
 	"sync"
-	"time"
 
 	"github.com/HarshalPatel1972/rift/internal/server"
 	"github.com/google/uuid"
+	"github.com/lxn/walk"
+	. "github.com/lxn/walk/declarative"
 	"github.com/skip2/go-qrcode"
 )
 
 var (
 	inputServer  *server.Server
 	sessionToken string
-	
+
 	// Connection state
 	connMu      sync.Mutex
 	isConnected bool
+
+	// GUI
+	ni       *walk.NotifyIcon
+	mw       *walk.MainWindow
+	icon     *walk.Icon
+	exitCh   = make(chan struct{})
 )
 
 const dashboardHTML = `<!DOCTYPE html>
@@ -524,50 +531,121 @@ async function copyLink() {
 </body>
 </html>`
 
-
-
 func main() {
 	// Generate session token
 	sessionToken = uuid.New().String()
 
-	// Start input server on port 8080 in background
+	// 1. Start Input Server (UDP/WebSocket Logic)
 	inputServer = server.New(":8080", sessionToken)
-	
-	// Hook into connection events
 	inputServer.OnConnect = func() {
 		connMu.Lock()
 		isConnected = true
 		connMu.Unlock()
+		updateTrayTooltip("RIFT: Connected")
 		log.Println("State update: Client Connected")
 	}
 	inputServer.OnDisconnect = func() {
 		connMu.Lock()
 		isConnected = false
 		connMu.Unlock()
+		updateTrayTooltip("RIFT: Waiting...")
 		log.Println("State update: Client Disconnected")
 	}
 
 	go func() {
-		log.Println("Starting input server on port 8080...")
 		if err := inputServer.Start(); err != nil {
 			log.Fatalf("Input server failed: %v", err)
 		}
 	}()
 
-	// Setup HTTP dashboard server on port 8081
+	// 2. Start HTTP Dashboard Server
 	http.HandleFunc("/", serveDashboard)
 	http.HandleFunc("/start", handleStart)
 	http.HandleFunc("/status", handleStatus)
 
-	// Auto-open browser
 	go func() {
-		time.Sleep(500 * time.Millisecond)
-		exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8081").Start()
+		log.Fatal(http.ListenAndServe(":8081", nil))
 	}()
 
-	fmt.Println("RIFT | Air Typing Host Active @ http://localhost:8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	// 3. Start System Tray (Main Thread)
+	startSystemTray()
 }
+
+func startSystemTray() {
+	// We need a specific manifest for walk to work properly on Windows
+	mw = new(walk.MainWindow)
+
+	if err := (MainWindow{
+		AssignTo: &mw,
+		Title:    "RIFT Background Host",
+		Visible:  false, // start hidden
+	}.Create()); err != nil {
+		log.Fatal(err)
+	}
+
+	// Create Tray Icon
+	var err error
+	ni, err = walk.NewNotifyIcon(mw)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ni.Dispose()
+
+	// Load Icon (Standard Application Icon or specific .ico if file exists)
+	// For now, use standard info icon if customized one not found
+	if icon, err = walk.NewIconFromFile("app.ico"); err != nil {
+		// Fallback to generic system icon if file missing
+		icon = walk.IconApplication()
+	}
+	ni.SetIcon(icon)
+	ni.SetToolTip("RIFT: Active")
+	ni.SetVisible(true)
+
+	// Context Menu
+	detailsAction := walk.NewAction()
+	detailsAction.SetText("Open Dashboard")
+	detailsAction.Triggered().Attach(func() {
+		openBrowser()
+	})
+	ni.ContextMenu().Actions().Add(detailsAction)
+	
+	ni.ContextMenu().Actions().Add(walk.NewSeparatorAction())
+
+	exitAction := walk.NewAction()
+	exitAction.SetText("Exit RIFT")
+	exitAction.Triggered().Attach(func() {
+		walk.App().Exit(0)
+	})
+	ni.ContextMenu().Actions().Add(exitAction)
+
+	// Click on icon -> Open Dashboard
+	ni.MouseDown().Attach(func(x, y int, button walk.MouseButton) {
+		if button == walk.LeftButton {
+			openBrowser()
+		}
+	})
+
+	// Show initial notification
+	ni.ShowCustom("RIFT is Running", "Air Typing Host is active in the background.", icon)
+
+	// Launch browser on start
+	openBrowser()
+
+	// Run message loop
+	mw.Run()
+}
+
+func updateTrayTooltip(msg string) {
+	if ni != nil {
+		ni.SetToolTip(msg)
+	}
+}
+
+func openBrowser() {
+	exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8081").Start()
+}
+
+// ... (Existing Handlers: serveDashboard, handleStatus, handleStart, IP helpers) ...
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
@@ -592,7 +670,7 @@ func handleStart(w http.ResponseWriter, r *http.Request) {
 	// Get current outbound IP (dynamic)
 	ip := GetOutboundIP()
 	
-	// Check for loopback
+	// Check for Loopback
 	isLoopback := false
 	if ip == "localhost" || ip == "127.0.0.1" || ip == "::1" {
 		isLoopback = true
@@ -613,7 +691,6 @@ func handleStart(w http.ResponseWriter, r *http.Request) {
 
 	// Return JSON response
 	w.Header().Set("Content-Type", "application/json")
-	// Use manual JSON construction for simplicity in main.go main pkg
 	fmt.Fprintf(w, `{"qr":"%s","url":"%s","ip":"%s","isLoopback":%t}`, qrDataURI, connectionURL, ip, isLoopback)
 }
 
@@ -621,7 +698,6 @@ func handleStart(w http.ResponseWriter, r *http.Request) {
 func GetOutboundIP() string {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		// Fallback to interface enumeration
 		return GetLocalIP()
 	}
 	defer conn.Close()
@@ -645,3 +721,4 @@ func GetLocalIP() string {
 	}
 	return "localhost"
 }
+
