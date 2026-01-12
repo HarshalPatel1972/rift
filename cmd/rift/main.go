@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"sync"
 
@@ -532,6 +533,14 @@ async function copyLink() {
 </html>`
 
 func main() {
+	// 0. Error Handling Wrapper
+	defer func() {
+		if r := recover(); r != nil {
+			showErrorBox("Critical Error", fmt.Sprint(r))
+			os.Exit(1)
+		}
+	}()
+
 	// Generate session token
 	sessionToken = uuid.New().String()
 
@@ -554,7 +563,7 @@ func main() {
 
 	go func() {
 		if err := inputServer.Start(); err != nil {
-			log.Fatalf("Input server failed: %v", err)
+			log.Printf("Input server warning: %v", err) // Don't crash on port busy, just log
 		}
 	}()
 
@@ -564,11 +573,18 @@ func main() {
 	http.HandleFunc("/status", handleStatus)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(":8081", nil))
+		if err := http.ListenAndServe(":8081", nil); err != nil {
+			showErrorBox("Startup Error", fmt.Sprintf("Failed to start Web Server: %v", err))
+			os.Exit(1)
+		}
 	}()
 
 	// 3. Start System Tray (Main Thread)
 	startSystemTray()
+}
+
+func showErrorBox(title, msg string) {
+	walk.MsgBox(nil, title, msg, walk.MsgBoxIconError)
 }
 
 func startSystemTray() {
@@ -580,14 +596,16 @@ func startSystemTray() {
 		Title:    "RIFT Background Host",
 		Visible:  false, // start hidden
 	}.Create()); err != nil {
-		log.Fatal(err)
+		showErrorBox("Initialization Failed", "Could not create Main Window. Ensure Common Controls 6.0 is available.\nError: "+err.Error())
+		os.Exit(1)
 	}
 
 	// Create Tray Icon
 	var err error
 	ni, err = walk.NewNotifyIcon(mw)
 	if err != nil {
-		log.Fatal(err)
+		showErrorBox("Tray Error", err.Error())
+		os.Exit(1)
 	}
 	defer ni.Dispose()
 
