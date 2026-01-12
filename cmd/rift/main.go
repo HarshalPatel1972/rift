@@ -611,6 +611,13 @@ func startSystemTray() {
 	
 	ni.ContextMenu().Actions().Add(walk.NewSeparatorAction())
 
+	updateAction := walk.NewAction()
+	updateAction.SetText("Check for Updates")
+	updateAction.Triggered().Attach(func() {
+		checkForUpdates()
+	})
+	ni.ContextMenu().Actions().Add(updateAction)
+
 	exitAction := walk.NewAction()
 	exitAction.SetText("Exit RIFT")
 	exitAction.Triggered().Attach(func() {
@@ -644,6 +651,13 @@ func updateTrayTooltip(msg string) {
 func openBrowser() {
 	exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8081").Start()
 }
+
+func checkForUpdates() {
+	// Simple implementation: Open Releases Page
+	repoURL := "https://github.com/HarshalPatel1972/rift/releases/latest"
+	exec.Command("rundll32", "url.dll,FileProtocolHandler", repoURL).Start()
+}
+
 
 // ... (Existing Handlers: serveDashboard, handleStatus, handleStart, IP helpers) ...
 
