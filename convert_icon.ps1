@@ -1,24 +1,35 @@
 Add-Type -AssemblyName System.Drawing
-$source = "web/icon.png"
-$dest = "cmd/rift/app.ico"
 
-if (-not (Test-Path $source)) {
-    Write-Error "Source file $source not found!"
+$srcPath = "$PSScriptRoot\web\icon.png"
+$destPath = "$PSScriptRoot\cmd\rift\app.ico"
+$size = 256
+
+try {
+    # Load original image
+    $srcImg = [System.Drawing.Bitmap]::FromFile($srcPath)
+    
+    # Create new resized bitmap (HighQualityBicubic for smoothness)
+    $resized = New-Object System.Drawing.Bitmap($size, $size)
+    $graph = [System.Drawing.Graphics]::FromImage($resized)
+    $graph.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $graph.DrawImage($srcImg, 0, 0, $size, $size)
+    
+    # Convert to Icon
+    $icon = [System.Drawing.Icon]::FromHandle($resized.GetHicon())
+    
+    # Save
+    $fileStream = New-Object System.IO.FileStream($destPath, [System.IO.FileMode]::Create)
+    $icon.Save($fileStream)
+    
+    # Cleanup
+    $fileStream.Close()
+    $icon.Dispose()
+    $graph.Dispose()
+    $resized.Dispose()
+    $srcImg.Dispose()
+    
+    Write-Host "Success: Resized to 256x256 and converted to ICO."
+} catch {
+    Write-Error "Conversion Failed: $_"
     exit 1
 }
-
-$bmp = [System.Drawing.Bitmap]::FromFile((Resolve-Path $source))
-# Create a new handle to the icon
-$hicon = $bmp.GetHicon()
-$icon = [System.Drawing.Icon]::FromHandle($hicon)
-
-$fs = [System.IO.File]::OpenWrite((Resolve-Path -Path "." -Relative).ToString() + "\" + $dest)
-$icon.Save($fs)
-$fs.Close()
-
-# Cleanup
-$icon.Dispose()
-[System.Runtime.InteropServices.Marshal]::DestroyIcon($hicon) | Out-Null
-$bmp.Dispose()
-
-Write-Host "Converted $source to $dest"

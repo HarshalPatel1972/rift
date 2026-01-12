@@ -563,19 +563,26 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
-// launchAppMode opens the URL in Chrome/Edge app mode (no URL bar, looks native)
+// launchAppMode opens the URL in Chrome/Edge app mode
 func launchAppMode(url string) {
-	// Try Edge first (built-in on Windows 10/11)
+	// Helper to launch via cmd /c start which handles focus better
+	launch := func(path string) {
+		// "start" command requires an empty string as first arg for title if quotes are used in path
+		cmd := exec.Command("cmd", "/c", "start", "", path, "--app="+url, "--window-size=600,600", "--force-renderer-accessibility")
+		cmd.Start()
+	}
+
+	// Try Edge first
 	if path := findBrowser("msedge.exe"); path != "" {
-		exec.Command(path, "--app="+url, "--window-size=600,600").Start()
+		launch(path)
 		return
 	}
 	// Try Chrome
 	if path := findBrowser("chrome.exe"); path != "" {
-		exec.Command(path, "--app="+url, "--window-size=600,600").Start()
+		launch(path)
 		return
 	}
-	// Fallback to default browser (no app mode)
+	// Fallback
 	exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 }
 
