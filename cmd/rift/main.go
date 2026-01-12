@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,7 +32,7 @@ const dashboardHTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RIFT</title>
-<link rel="icon" type="image/png" href="/favicon">
+<link rel="icon" type="image/png" href="/favicon?v=9999">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -600,11 +601,30 @@ func findBrowser(name string) string {
 }
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
+	// Read and encode icon for direct embedding (bypasses all caches)
+	iconBytes, err := os.ReadFile("web/icon.png")
+	iconBase64 := ""
+	if err == nil {
+		iconBase64 = "data:image/png;base64," + base64.StdEncoding.EncodeToString(iconBytes)
+	}
+
+	// Inject into HTML
+	finalHTML := dashboardHTML
+	if iconBase64 != "" {
+		// Replace the existing link or inject if missing
+		if strings.Contains(finalHTML, "/favicon?v=9999") {
+			finalHTML = strings.Replace(finalHTML, "/favicon?v=9999", iconBase64, 1)
+		} else {
+			// Fallback replacement if the string doesn't match exactly
+			finalHTML = strings.Replace(finalHTML, "</title>", "</title><link rel=\"icon\" href=\""+iconBase64+"\">", 1)
+		}
+	}
+
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
-	w.Write([]byte(dashboardHTML))
+	w.Write([]byte(finalHTML))
 }
 
 func handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -665,6 +685,7 @@ func GetLocalIP() string {
 
 // serveFavicon serves the icon.png file
 func serveFavicon(w http.ResponseWriter, r *http.Request) {
+	log.Println("Serving icon from web/icon.png")
 	iconData, err := os.ReadFile("web/icon.png")
 	if err != nil {
 		http.Error(w, "Icon not found", 404)
