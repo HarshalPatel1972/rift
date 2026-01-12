@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
     <title>RIFT Input</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #000000;
@@ -15,6 +15,7 @@
             --accent: #fff;
             --success: #00AA55;
             --error: #FF3333;
+            --touch-bg: #111;
         }
 
         body,
@@ -25,41 +26,35 @@
             height: 100%;
             background-color: var(--bg);
             color: var(--text-main);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             overflow: hidden;
+            touch-action: none;
+            /* Prevent browser zooming/scrolling */
         }
 
         /* Top Bar */
         .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
             height: 60px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            pointer-events: none;
-            /* Let clicks pass through */
+            padding: 0 20px;
+            border-bottom: 1px solid #222;
         }
 
         .logo {
             font-weight: 600;
             font-size: 14px;
-            letter-spacing: -0.5px;
             color: var(--text-muted);
         }
 
-        /* Status Indicator */
         .status-badge {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: var(--text-muted);
-            transition: color 0.3s;
         }
 
         .dot {
@@ -67,24 +62,61 @@
             height: 6px;
             border-radius: 50%;
             background-color: #333;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s;
         }
 
         .status-badge.connected .dot {
             background-color: var(--success);
-            box-shadow: 0 0 12px rgba(0, 170, 85, 0.4);
-            transform: scale(1.1);
-        }
-
-        .status-badge.connected {
-            color: var(--text-main);
+            box-shadow: 0 0 8px var(--success);
         }
 
         .status-badge.disconnected .dot {
             background-color: var(--error);
         }
 
-        /* Input Area */
+        /* Mode Switcher */
+        .controls {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            gap: 10px;
+            background: #050505;
+        }
+
+        .mode-btn {
+            background: #222;
+            border: none;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: #fff;
+            color: #000;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            height: calc(100% - 110px);
+            position: relative;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        #view-mouse.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Keyboard View */
         textarea {
             width: 100%;
             height: 100%;
@@ -95,28 +127,64 @@
             font-family: 'Inter', sans-serif;
             font-size: 18px;
             line-height: 1.6;
-            padding: 80px 24px 40px;
-            /* Space for header */
-            box-sizing: border-box;
+            padding: 20px;
             resize: none;
         }
 
         textarea::placeholder {
             color: #333;
-            font-weight: 400;
         }
 
-        /* Mobile Overlay Advice */
+        /* Touchpad View */
+        .touchpad-area {
+            flex: 1;
+            /* Grow to fill space */
+            width: 100%;
+            background: var(--touch-bg);
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .mouse-buttons {
+            height: 80px;
+            display: flex;
+            border-top: 1px solid #333;
+            width: 100%;
+            flex-shrink: 0;
+            background: #000;
+        }
+
+        .m-btn {
+            flex: 1;
+            background: #1a1a1a;
+            border: none;
+            border-left: 1px solid #333;
+            color: #666;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .m-btn:active {
+            background: #333;
+            color: #fff;
+        }
+
+        .m-btn:first-child {
+            border-left: none;
+        }
+
         .hint {
             position: absolute;
-            bottom: 30px;
+            bottom: 100px;
             left: 0;
             right: 0;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #444;
             pointer-events: none;
-            opacity: 0.8;
         }
     </style>
 </head>
@@ -130,23 +198,53 @@
         </div>
     </div>
 
-    <textarea id="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-        placeholder="Tap to type..."></textarea>
+    <div class="controls">
+        <button class="mode-btn active" onclick="setMode('keyboard')">KEYBOARD</button>
+        <button class="mode-btn" onclick="setMode('mouse')">MOUSE</button>
+    </div>
 
-    <div class="hint">RIFT ACTIVE • TYPE FREELY</div>
+    <!-- Keyboard View -->
+    <div id="view-keyboard" class="view active">
+        <textarea id="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            placeholder="Type here..."></textarea>
+    </div>
+
+    <!-- Mouse View -->
+    <div id="view-mouse" class="view">
+        <div id="trackpad" class="touchpad-area">
+            <div class="hint">SWIPE TO MOVE • TAP TO CLICK</div>
+        </div>
+        <div class="mouse-buttons">
+            <button class="m-btn" id="btn-left">LEFT</button>
+            <button class="m-btn" id="btn-right">RIGHT</button>
+        </div>
+    </div>
 
     <script>
         const editor = document.getElementById('editor');
         const statusBadge = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
+        const trackpad = document.getElementById('trackpad');
 
         let ws = null;
         let reconnectInterval = 1000;
         let lastLength = 0;
 
-        // Auto-focus logic
-        document.body.addEventListener('click', () => editor.focus());
-        editor.focus();
+        // Mode Switching
+        function setMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+            if (mode === 'keyboard') {
+                document.querySelector('[onclick="setMode(\'keyboard\')"]').classList.add('active');
+                document.getElementById('view-keyboard').classList.add('active');
+                editor.focus();
+            } else {
+                document.querySelector('[onclick="setMode(\'mouse\')"]').classList.add('active');
+                document.getElementById('view-mouse').classList.add('active');
+                editor.blur();
+            }
+        }
 
         function setStatus(state) {
             if (state === 'connected') {
@@ -183,9 +281,9 @@
 
         connect();
 
+        // --- KEYBOARD LOGIC ---
         editor.addEventListener('input', (e) => {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
-
             const currentText = editor.value;
             const currentLength = currentText.length;
 
@@ -209,6 +307,51 @@
                 ws.send(JSON.stringify({ type: "key", key: "enter" }));
             }
         });
+
+        // --- MOUSE LOGIC ---
+        let lastX = 0, lastY = 0;
+        const sensitivity = 1.5;
+
+        // Touch Movements
+        trackpad.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            const touch = e.touches[0];
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+        }, { passive: false });
+
+        trackpad.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+            const touch = e.touches[0];
+            const dx = Math.round((touch.clientX - lastX) * sensitivity);
+            const dy = Math.round((touch.clientY - lastY) * sensitivity);
+
+            if (dx !== 0 || dy !== 0) {
+                ws.send(JSON.stringify({ type: "mouse", dx: dx, dy: dy }));
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+            }
+        }, { passive: false });
+
+        // Click Buttons
+        document.getElementById('btn-left').addEventListener('click', () => {
+            if (ws) ws.send(JSON.stringify({ type: "mouse", click: "left" }));
+        });
+        document.getElementById('btn-right').addEventListener('click', () => {
+            if (ws) ws.send(JSON.stringify({ type: "mouse", click: "right" }));
+        });
+
+        // Tap to Click (Simple)
+        let tapStart = 0;
+        trackpad.addEventListener('touchstart', () => { tapStart = Date.now(); });
+        trackpad.addEventListener('touchend', () => {
+            if (Date.now() - tapStart < 150) { // Short tap
+                if (ws) ws.send(JSON.stringify({ type: "mouse", click: "left" }));
+            }
+        });
+
     </script>
 </body>
 

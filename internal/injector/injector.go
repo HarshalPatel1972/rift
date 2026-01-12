@@ -62,3 +62,45 @@ func sendVirtualKey(vk uint16) {
 	input.Ki.DwFlags = win.KEYEVENTF_KEYUP
 	win.SendInput(1, unsafe.Pointer(&input), int32(unsafe.Sizeof(input)))
 }
+
+// --- MOUSE IMPLEMENTATION ---
+
+// MouseMove moves the cursor by a relative amount (dx, dy)
+func MouseMove(dx, dy int) {
+	input := win.MOUSE_INPUT{
+		Type: win.INPUT_MOUSE,
+	}
+	input.Mi.Dx = int32(dx)
+	input.Mi.Dy = int32(dy)
+	input.Mi.DwFlags = win.MOUSEEVENTF_MOVE
+
+	// We cast to the generic INPUT struct pointer logic used by lxn/win
+	win.SendInput(1, unsafe.Pointer(&input), int32(unsafe.Sizeof(input)))
+}
+
+// MouseClick clicks a button ("left", "right")
+func MouseClick(btn string) {
+	var downFlag, upFlag uint32
+
+	switch btn {
+	case "left":
+		downFlag = win.MOUSEEVENTF_LEFTDOWN
+		upFlag = win.MOUSEEVENTF_LEFTUP
+	case "right":
+		downFlag = win.MOUSEEVENTF_RIGHTDOWN
+		upFlag = win.MOUSEEVENTF_RIGHTUP
+	default:
+		return
+	}
+
+	// Click Down
+	input := win.MOUSE_INPUT{
+		Type: win.INPUT_MOUSE,
+	}
+	input.Mi.DwFlags = downFlag
+	win.SendInput(1, unsafe.Pointer(&input), int32(unsafe.Sizeof(input)))
+
+	// Click Up
+	input.Mi.DwFlags = upFlag
+	win.SendInput(1, unsafe.Pointer(&input), int32(unsafe.Sizeof(input)))
+}

@@ -10,9 +10,12 @@ import (
 )
 
 type Message struct {
-	Type string `json:"type"`
-	Text string `json:"text,omitempty"`
-	Key  string `json:"key,omitempty"`
+	Type  string `json:"type"`
+	Text  string `json:"text,omitempty"`
+	Key   string `json:"key,omitempty"`
+	Dx    int    `json:"dx,omitempty"`
+	Dy    int    `json:"dy,omitempty"`
+	Click string `json:"click,omitempty"`
 }
 
 
@@ -88,6 +91,13 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		case "key":
 			if msg.Key != "" {
 				injector.TapKey(msg.Key)
+			}
+		case "mouse":
+			if msg.Dx != 0 || msg.Dy != 0 {
+				injector.MouseMove(msg.Dx, msg.Dy)
+			}
+			if msg.Click != "" {
+				injector.MouseClick(msg.Click)
 			}
 		}
 	}
