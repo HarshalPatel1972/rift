@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#050505">
-    <title>RIFT</title>
+    <meta name="theme-color" content="#000000">
+    <title>RIFT Input</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050505;
-            --text-color: #00ff9d;
-            --font-stack: 'Courier New', Courier, monospace;
+            --bg: #000000;
+            --text-main: #e5e5e5;
+            --text-muted: #666;
+            --accent: #fff;
+            --success: #00AA55;
+            --error: #FF3333;
         }
 
         body,
@@ -19,127 +23,166 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--bg-color);
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             overflow: hidden;
-            font-family: var(--font-stack);
+        }
+
+        /* Top Bar */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            pointer-events: none;
+            /* Let clicks pass through */
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: -0.5px;
+            color: var(--text-muted);
         }
 
         /* Status Indicator */
-        #status-dot {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 12px;
-            height: 12px;
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background-color: #ef4444;
-            /* Red default */
-            box-shadow: 0 0 5px #ef4444;
-            transition: all 0.3s ease;
-            z-index: 10;
-            pointer-events: none;
+            background-color: #333;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        #status-dot.connected {
-            background-color: var(--text-color);
-            box-shadow: 0 0 15px var(--text-color);
-            animation: pulse 2s infinite;
+        .status-badge.connected .dot {
+            background-color: var(--success);
+            box-shadow: 0 0 12px rgba(0, 170, 85, 0.4);
+            transform: scale(1.1);
         }
 
-        @keyframes pulse {
-            0% {
-                transform: scale(0.95);
-                opacity: 0.7;
-            }
+        .status-badge.connected {
+            color: var(--text-main);
+        }
 
-            50% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(0.95);
-                opacity: 0.7;
-            }
+        .status-badge.disconnected .dot {
+            background-color: var(--error);
         }
 
         /* Input Area */
         textarea {
             width: 100%;
             height: 100%;
-            background-color: transparent;
-            color: var(--text-color);
+            background: transparent;
+            color: var(--text-main);
             border: none;
             outline: none;
-            font-size: 20px;
-            line-height: 1.5;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            line-height: 1.6;
+            padding: 80px 24px 40px;
+            /* Space for header */
             box-sizing: border-box;
             resize: none;
-            font-family: inherit;
-            /* Hide scrollbar but allow scrolling */
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        textarea::-webkit-scrollbar {
-            display: none;
         }
 
         textarea::placeholder {
-            color: #00ff9d44;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Mobile Overlay Advice */
+        .hint {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #444;
+            pointer-events: none;
+            opacity: 0.8;
         }
     </style>
 </head>
 
 <body>
-    <div id="status-dot"></div>
+    <div class="header">
+        <div class="logo">RIFT BRIDGE</div>
+        <div id="status-indicator" class="status-badge">
+            <span class="dot"></span>
+            <span id="status-text">Connecting...</span>
+        </div>
+    </div>
+
     <textarea id="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-        placeholder="INITIALIZE LINK..."></textarea>
+        placeholder="Tap to type..."></textarea>
+
+    <div class="hint">RIFT ACTIVE • TYPE FREELY</div>
 
     <script>
         const editor = document.getElementById('editor');
-        const statusDot = document.getElementById('status-dot');
+        const statusBadge = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
 
         let ws = null;
-        let reconnectInterval = 2000;
+        let reconnectInterval = 1000;
         let lastLength = 0;
 
-        // Auto-focus on tap
-        document.body.onclick = () => editor.focus();
+        // Auto-focus logic
+        document.body.addEventListener('click', () => editor.focus());
         editor.focus();
+
+        function setStatus(state) {
+            if (state === 'connected') {
+                statusBadge.className = 'status-badge connected';
+                statusText.textContent = 'Active';
+            } else {
+                statusBadge.className = 'status-badge disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
 
         function connect() {
             const scheme = window.location.protocol === "https:" ? "wss" : "ws";
-            // Preserve the token query param from the current URL
-            const wsUrl = `${scheme}://${window.location.host}/ws${window.location.search}`;
+            const wsUrl = \`\${scheme}://\${window.location.host}/ws\${window.location.search}\`;
 
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                console.log("Connected");
-                statusDot.className = 'connected';
-                reconnectInterval = 2000; // Reset backoff
+                setStatus('connected');
+                reconnectInterval = 1000;
             };
 
             ws.onclose = () => {
-                console.log("Disconnected");
-                statusDot.className = '';
-                // Expo backoff for reconnect
+                setStatus('disconnected');
                 setTimeout(connect, reconnectInterval);
-                reconnectInterval = Math.min(reconnectInterval * 1.5, 30000); // Cap at 30s
+                reconnectInterval = Math.min(reconnectInterval * 1.5, 10000);
             };
 
             ws.onerror = (e) => {
-                console.error("WS Error:", e);
+                console.error("WS Error");
                 ws.close();
             };
         }
 
-        // Initialize connection
         connect();
 
-        // Typing Logic
         editor.addEventListener('input', (e) => {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -147,30 +190,23 @@
             const currentLength = currentText.length;
 
             if (currentLength > lastLength) {
-                // Text added
                 const addedText = currentText.slice(lastLength);
                 ws.send(JSON.stringify({ type: "input", text: addedText }));
             } else if (currentLength < lastLength) {
-                // Text deleted (Backspace)
                 const diff = lastLength - currentLength;
                 for (let i = 0; i < diff; i++) {
                     ws.send(JSON.stringify({ type: "key", key: "backspace" }));
                 }
             }
             lastLength = currentLength;
-
-            // Keep view at bottom
             editor.scrollTop = editor.scrollHeight;
         });
 
-        // Special Keys
         editor.addEventListener('keydown', (e) => {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
-
             if (e.key === 'Enter') {
                 e.preventDefault();
                 ws.send(JSON.stringify({ type: "key", key: "enter" }));
-                // Visual feedback? maybe
             }
         });
     </script>

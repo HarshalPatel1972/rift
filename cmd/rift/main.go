@@ -193,7 +193,7 @@ button:disabled { opacity: 0.5; cursor: wait; transform: none; }
   </div>
 
 <script>
-// Anime.js Background Effect - "Data Rain / Signal Flow"
+// Vanilla JS Background Effect - "Data Rain / Signal Flow"
 const canvas = document.getElementById('bg-canvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -209,36 +209,53 @@ resize();
 
 // Create particles
 const particles = [];
-const particleCount = 60; // Not too crowded
+const particleCount = 80; // More particles
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  
+  reset() {
+    this.x = Math.random() * width;
+    this.y = Math.random() * height + height; // Start below
+    this.size = Math.random() * 2 + 1;
+    this.speed = Math.random() * 1.5 + 0.5;
+    this.opacity = Math.random() * 0.5 + 0.1;
+  }
+  
+  update() {
+    this.y -= this.speed;
+    if (this.y < -10) {
+      this.reset();
+    }
+  }
+  
+  draw() {
+    ctx.fillStyle = \`rgba(255, 255, 255, \${this.opacity * 0.1})\`; // Very subtle
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
 
 for(let i=0; i<particleCount; i++) {
-  particles.push({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    size: Math.random() * 2 + 1,
-    speed: Math.random() * 2 + 0.5
-  });
+  particles.push(new Particle());
+  // Pre-scatter
+  particles[i].y = Math.random() * height;
 }
 
 function animate() {
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
   
+  // Update and draw particles
   particles.forEach(p => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Move up like rising data
-    p.y -= p.speed;
-    if(p.y < -10) {
-      p.y = height + 10;
-      p.x = Math.random() * width;
-    }
+    p.update();
+    p.draw();
   });
 
-  // Connecting lines for "Network" feel
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+  // Connecting lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.beginPath();
   for(let i=0; i<particles.length; i++) {
     for(let j=i+1; j<particles.length; j++) {
@@ -246,7 +263,7 @@ function animate() {
       const dy = particles[i].y - particles[j].y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       
-      if(dist < 150) {
+      if(dist < 100) {
         ctx.moveTo(particles[i].x, particles[i].y);
         ctx.lineTo(particles[j].x, particles[j].y);
       }
@@ -269,13 +286,6 @@ async function init() {
   ref.disabled = true;
   st.textContent = "Negotiating...";
   
-  // Animate button click
-  anime({
-    targets: '#btn-init',
-    scale: [1, 0.95, 1],
-    duration: 300
-  });
-  
   try {
     const res = await fetch('/start');
     const data = await res.json();
@@ -284,33 +294,20 @@ async function init() {
     document.getElementById('ip-display').textContent = data.ip;
     document.getElementById('url-text').textContent = data.url;
     
-    // Smooth reveal
+    // Vanilla Fade In
     qrArea.style.display = 'block';
-    qrArea.style.opacity = 0;
-    anime({
-      targets: '#qr-area',
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 800,
-      easing: 'easeOutExpo'
-    });
+    // Use timeout to allow display:block to apply before opacity transition
+    setTimeout(() => {
+        qrArea.classList.add('visible');
+    }, 10);
     
     btn.style.display = 'none';
     ref.style.display = 'block';
     ref.disabled = false;
     st.textContent = "Signal Active • Ready for Input";
     
-    // Animate refresh button entrance
-    anime({
-      targets: '#btn-refresh',
-      opacity: [0, 1],
-      translateY: [10, 0],
-      delay: 200,
-      duration: 600
-    });
-    
   } catch(e) {
-    st.textContent = "Link Failed";
+    st.textContent = "Link Failed: " + e.message;
     btn.disabled = false;
     ref.disabled = false;
   }
@@ -342,12 +339,15 @@ func main() {
 		exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8081").Start()
 	}()
 
-	fmt.Println("RIFT Dashboard starting at http://localhost:8081")
+	fmt.Println("RIFT Dashboard (Anime.js Update) starting at http://localhost:8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	w.Write([]byte(dashboardHTML))
 }
 
