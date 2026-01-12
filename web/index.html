@@ -160,7 +160,7 @@
 
         function connect() {
             const scheme = window.location.protocol === "https:" ? "wss" : "ws";
-            const wsUrl = \`\${scheme}://\${window.location.host}/ws\${window.location.search}\`;
+            const wsUrl = `${scheme}://${window.location.host}/ws${window.location.search}`;
 
             ws = new WebSocket(wsUrl);
 

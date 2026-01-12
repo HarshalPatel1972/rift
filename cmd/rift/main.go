@@ -232,7 +232,7 @@ class Particle {
   }
   
   draw() {
-    ctx.fillStyle = \`rgba(255, 255, 255, \${this.opacity * 0.1})\`; // Very subtle
+    ctx.fillStyle = 'rgba(255, 255, 255, ' + (this.opacity * 0.1) + ')'; // Very subtle
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
     ctx.fill();
