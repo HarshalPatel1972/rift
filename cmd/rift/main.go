@@ -195,8 +195,8 @@ font-family:monospace;
 <span><span id="current-ip"></span></span>
 </div>
 </div>
-<button id="generate" onclick="generate()">Initialize</button>
-<button id="refresh" onclick="generate()" style="display:none">↻ Reconnect</button>
+<button id="generate" onclick="generate()">INITIALIZE</button>
+<button id="refresh" onclick="generate()" style="display:none">↻ RECONNECT</button>
 <div id="status">Ready</div>
 <div id="url"></div>
 </div>
