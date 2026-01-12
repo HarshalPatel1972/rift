@@ -8,7 +8,7 @@ go get github.com/google/uuid
 go install github.com/akavel/rsrc@latest
 
 echo [2/4] Embedding manifest & icon...
-rsrc -manifest rift.manifest -ico app.ico -o rsrc.syso
+rsrc -manifest rift.manifest -ico app.ico -o cmd/rift/rsrc.syso
 
 echo [3/4] Building executable...
 set CGO_ENABLED=1

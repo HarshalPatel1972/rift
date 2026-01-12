@@ -34,7 +34,7 @@ jobs:
       run: go run cmd/icon/main.go
 
     - name: Embed Resources
-      run: rsrc -manifest rift.manifest -ico app.ico -o rsrc.syso
+      run: rsrc -manifest rift.manifest -ico app.ico -o cmd/rift/rsrc.syso
 
     - name: Build Binary
       run: go build -ldflags="-H windowsgui -s -w" -o rift.exe cmd/rift/main.go
