@@ -17,9 +17,11 @@ type Message struct {
 
 
 type Server struct {
-	Addr     string
-	Token    string
-	upgrader websocket.Upgrader
+	Addr         string
+	Token        string
+	upgrader     websocket.Upgrader
+	OnConnect    func()
+	OnDisconnect func()
 }
 
 func New(addr, token string) *Server {
@@ -33,13 +35,16 @@ func New(addr, token string) *Server {
 }
 
 func (s *Server) Start() error {
+	// Create dedicated mux for this server
+	mux := http.NewServeMux()
+	
 	// Serve embedded assets
-	http.Handle("/", http.FileServer(http.FS(web.Assets)))
+	mux.Handle("/", http.FileServer(http.FS(web.Assets)))
 	
 	// WebSocket endpoint
-	http.HandleFunc("/ws", s.handleWS)
+	mux.HandleFunc("/ws", s.handleWS)
 	
-	return http.ListenAndServe(s.Addr, nil)
+	return http.ListenAndServe(s.Addr, mux)
 }
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +63,15 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 	log.Println("Client connected")
+	
+	if s.OnConnect != nil {
+		s.OnConnect()
+	}
+	defer func() {
+		if s.OnDisconnect != nil {
+			s.OnDisconnect()
+		}
+	}()
 
 	for {
 		var msg Message
