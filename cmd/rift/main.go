@@ -27,6 +27,7 @@ const dashboardHTML = `<!DOCTYPE html>
 <title>RIFT</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <style>
 :root {
   --bg: #030303;
@@ -46,106 +47,121 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  position: relative;
+}
+canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  opacity: 0.4;
 }
 .card {
-  width: 100%;
-  max-width: 400px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 40px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  text-align: center;
   position: relative;
-  overflow: hidden;
+  z-index: 10;
+  width: 100%;
+  max-width: 520px; /* Made larger */
+  background: rgba(10, 10, 10, 0.85); /* Slight transparency */
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.6);
+  text-align: center;
 }
-/* Subtle top glow */
 .card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #333, transparent);
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 h1 {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   margin-bottom: 8px;
-  letter-spacing: -0.5px;
+  letter-spacing: -1px;
 }
 .subtitle {
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 32px;
 }
 .qr-container {
   display: none;
-  margin: 24px 0;
-  animation: fadeScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 32px 0;
+  animation: fadeScale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .qr-container.visible { display: block; }
 .qr-frame {
   background: white;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 16px;
+  border-radius: 12px;
   display: inline-block;
+  box-shadow: 0 0 20px rgba(255,255,255,0.1);
 }
-.qr-frame img { display: block; border-radius: 4px; }
+.qr-frame img { display: block; border-radius: 6px; }
 .meta {
-  margin-top: 16px;
+  margin-top: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
 }
 .dot {
-  width: 6px; height: 6px;
+  width: 8px; height: 8px;
   background: var(--success);
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(0, 170, 85, 0.4);
+  box-shadow: 0 0 10px rgba(0, 170, 85, 0.6);
+  animation: pulse 2s infinite;
 }
 button {
   width: 100%;
-  height: 48px;
+  height: 56px;
   background: var(--accent);
   color: black;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-top: 8px;
 }
-button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-button:disabled {
-  opacity: 0.5;
-  cursor: wait;
-  transform: none;
-}
+button:hover { opacity: 0.9; transform: scale(1.02); }
+button:disabled { opacity: 0.5; cursor: wait; transform: none; }
 #btn-refresh {
-  background: #222;
+  background: rgba(255,255,255,0.08);
   color: white;
-  margin-top: 12px;
+  margin-top: 16px;
   display: none;
 }
-#btn-refresh:hover { background: #333; }
+#btn-refresh:hover { background: rgba(255,255,255,0.12); }
 .status {
-  margin-top: 24px;
-  font-size: 12px;
-  color: #444;
+  margin-top: 32px;
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
 }
 .url-c {
-  margin-top: 12px;
-  font-family: monospace;
-  font-size: 11px;
+  margin-top: 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
   color: #555;
-  word-break: break-all;
+  opacity: 0.6;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 170, 85, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 170, 85, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 170, 85, 0); }
 }
 @keyframes fadeScale {
   from { opacity: 0; transform: scale(0.95); }
@@ -154,13 +170,14 @@ button:disabled {
 </style>
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
   <div class="card">
     <h1>RIFT</h1>
     <div class="subtitle">Air Typing Bridge</div>
 
     <div id="qr-area" class="qr-container">
       <div class="qr-frame">
-        <img id="qr" width="220" height="220" alt="QR" />
+        <img id="qr" width="240" height="240" alt="QR" />
       </div>
       <div class="meta">
         <span class="dot"></span>
@@ -168,14 +185,80 @@ button:disabled {
       </div>
     </div>
 
-    <button id="btn-init" onclick="init()">Connect</button>
-    <button id="btn-refresh" onclick="init()">Regenerate Link</button>
+    <button id="btn-init" onclick="init()">Connect Device</button>
+    <button id="btn-refresh" onclick="init()">Generate New Link</button>
 
-    <div class="status" id="status">Ready</div>
+    <div class="status" id="status">Secure P2P Connection</div>
     <div class="url-c" id="url-text"></div>
   </div>
 
 <script>
+// Anime.js Background Effect - "Data Rain / Signal Flow"
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+
+function resize() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Create particles
+const particles = [];
+const particleCount = 60; // Not too crowded
+
+for(let i=0; i<particleCount; i++) {
+  particles.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: Math.random() * 2 + 1,
+    speed: Math.random() * 2 + 0.5
+  });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+  
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Move up like rising data
+    p.y -= p.speed;
+    if(p.y < -10) {
+      p.y = height + 10;
+      p.x = Math.random() * width;
+    }
+  });
+
+  // Connecting lines for "Network" feel
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+  ctx.beginPath();
+  for(let i=0; i<particles.length; i++) {
+    for(let j=i+1; j<particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      
+      if(dist < 150) {
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+      }
+    }
+  }
+  ctx.stroke();
+  
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Main Logic
 async function init() {
   const btn = document.getElementById('btn-init');
   const ref = document.getElementById('btn-refresh');
@@ -184,7 +267,14 @@ async function init() {
   
   btn.disabled = true;
   ref.disabled = true;
-  st.textContent = "Connecting...";
+  st.textContent = "Negotiating...";
+  
+  // Animate button click
+  anime({
+    targets: '#btn-init',
+    scale: [1, 0.95, 1],
+    duration: 300
+  });
   
   try {
     const res = await fetch('/start');
@@ -194,14 +284,33 @@ async function init() {
     document.getElementById('ip-display').textContent = data.ip;
     document.getElementById('url-text').textContent = data.url;
     
-    qrArea.classList.add('visible');
+    // Smooth reveal
+    qrArea.style.display = 'block';
+    qrArea.style.opacity = 0;
+    anime({
+      targets: '#qr-area',
+      opacity: [0, 1],
+      translateY: [20, 0],
+      duration: 800,
+      easing: 'easeOutExpo'
+    });
     
     btn.style.display = 'none';
     ref.style.display = 'block';
     ref.disabled = false;
-    st.textContent = "Connection Active";
+    st.textContent = "Signal Active • Ready for Input";
+    
+    // Animate refresh button entrance
+    anime({
+      targets: '#btn-refresh',
+      opacity: [0, 1],
+      translateY: [10, 0],
+      delay: 200,
+      duration: 600
+    });
+    
   } catch(e) {
-    st.textContent = "Failed to connect";
+    st.textContent = "Link Failed";
     btn.disabled = false;
     ref.disabled = false;
   }
