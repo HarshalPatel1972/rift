@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0f0b12">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RIFT">
+<title>RIFT</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+<script src="vendor/nacl-fast.min.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body data-theme="auto" data-mode="type" data-link="connecting">
+
+<!-- Line icons: 24px grid, 1.75 stroke, round caps. -->
+<svg class="sprite" aria-hidden="true">
+  <defs>
+    <symbol id="i-type" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M8 14h8"/></symbol>
+    <symbol id="i-touch" viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="13" rx="3"/><path d="M3 12.5h18M12 12.5v4M8 20.5h8"/></symbol>
+    <symbol id="i-media" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+    <symbol id="i-keys" viewBox="0 0 24 24"><path d="M9 9V6.5a2.5 2.5 0 1 0-2.5 2.5H9Zm0 0h6m-6 0v6m6-6V6.5A2.5 2.5 0 1 1 17.5 9H15Zm0 0v6m0 0h-6m6 0v2.5a2.5 2.5 0 1 0 2.5-2.5H15Zm-6 0v2.5A2.5 2.5 0 1 1 6.5 15H9Z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 20.5h7M12 17v3.5"/></symbol>
+    <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M5 3.5 18.5 10l-6 1.8L10 18 5 3.5Z"/><path d="m12.5 11.8 5.5 5.7"/></symbol>
+    <symbol id="i-caret" viewBox="0 0 24 24"><path d="M9 4.5h6M9 19.5h6M12 4.5v15"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 5v14M18.5 5.5 9 12l9.5 6.5V5.5Z"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M18 5v14M5.5 5.5 15 12l-9.5 6.5V5.5Z"/></symbol>
+    <symbol id="i-playpause" viewBox="0 0 24 24"><path d="M4.5 5.5 12.5 12l-8 6.5v-13ZM16 5.5v13M20 5.5v13"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4.5h4.5"/><path d="M10.5 9.5v5M14 9.5a1.5 1.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5"/><path d="M10.5 9.5v5M14 9.5a1.5 1.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-voldown" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5ZM16 12h4"/></symbol>
+    <symbol id="i-volup" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5ZM16 12h5M18.5 9.5v5"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5ZM16 9.5l5 5M21 9.5l-5 5"/></symbol>
+    <symbol id="i-display" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 20.5h7M15 8.2A3.5 3.5 0 1 0 15 13a3 3 0 0 1 0-4.8Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/></symbol>
+    <symbol id="i-sleep" viewBox="0 0 24 24"><path d="M3.5 9h5l-5 6h5M13 4h4l-4 4.5h4"/><path d="M20.5 15.5a6 6 0 0 1-8.5 5.5"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.5-2h5L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z"/><circle cx="12" cy="12.5" r="3.5"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <img class="mark" src="icon-192.png" alt="">
+    <div class="where">
+      <span class="where-label" id="where-label">reaching</span>
+      <span class="where-host" id="host">…</span>
+    </div>
+    <span class="rtt" id="rtt" hidden></span>
+    <button id="open-settings" class="icon-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </header>
+
+  <!-- THERE: a live window into the computer, through the rift. -->
+  <section class="portal" id="portal" aria-label="Your computer's screen">
+    <img id="portal-img" alt="" draggable="false" hidden>
+    <div id="portal-ring" class="portal-ring" hidden></div>
+    <div class="portal-empty" id="portal-empty">
+      <b id="portal-empty-title">The other side</b>
+      <span id="portal-empty-text">Your screen appears here once the rift is open.</span>
+    </div>
+    <div class="lens" role="radiogroup" aria-label="What to show">
+      <button role="radio" data-lens="1" aria-label="Whole screen"><svg><use href="#i-screen"/></svg></button>
+      <button role="radio" data-lens="2" aria-label="Follow pointer"><svg><use href="#i-pointer"/></svg></button>
+      <button role="radio" data-lens="3" aria-label="Follow typing"><svg><use href="#i-caret"/></svg></button>
+      <span class="lens-zoom">
+        <button data-zoom="-1" aria-label="Zoom out"><svg><use href="#i-minus"/></svg></button>
+        <button data-zoom="1" aria-label="Zoom in"><svg><use href="#i-plus"/></svg></button>
+      </span>
+    </div>
+    <span class="portal-tag">there</span>
+  </section>
+
+  <!-- The rift itself: drag to resize, its light is the connection. -->
+  <div class="seam" id="seam" role="separator" aria-orientation="horizontal" aria-label="Rift — drag to resize the view">
+    <svg class="seam-svg" id="seam-svg" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="riftLight" x1="0" x2="1">
+          <stop offset="0" class="stop-a"/>
+          <stop offset="0.5" class="stop-b"/>
+          <stop offset="1" class="stop-c"/>
+        </linearGradient>
+        <filter id="seamGlow" x="-5%" y="-300%" width="110%" height="700%"><feGaussianBlur stdDeviation="5"/></filter>
+      </defs>
+      <path class="seam-glow" id="seam-glow"/>
+      <path class="seam-light" id="seam-light"/>
+      <path class="seam-core" id="seam-core"/>
+    </svg>
+    <span class="seam-label" id="seam-label" hidden></span>
+  </div>
+
+  <!-- HERE: your hands. -->
+  <main class="here">
+    <!-- TYPE -->
+    <section class="mode" id="mode-type" aria-label="Type">
+      <div class="editor-wrap">
+        <textarea id="editor" enterkeyhint="enter" aria-label="Type to your computer"></textarea>
+        <div class="type-hint" aria-hidden="true"><span>Type here.</span><span class="lit">It appears there.</span></div>
+      </div>
+      <div class="keyrow" id="keyrow">
+        <button class="cap mod" data-mod="1" data-mac-label="⌘">ctrl</button>
+        <button class="cap mod" data-mod="4" data-mac-label="⌥">alt</button>
+        <button class="cap mod" data-mod="2" data-mac-label="⇧">shift</button>
+        <button class="cap mod" data-mod="8" data-mac-label="⌃">win</button>
+        <span class="gap"></span>
+        <button class="cap" data-vk="27">esc</button>
+        <button class="cap" data-vk="9">tab</button>
+        <button class="cap" data-vk="37" data-repeat aria-label="Left">←</button>
+        <button class="cap" data-vk="38" data-repeat aria-label="Up">↑</button>
+        <button class="cap" data-vk="40" data-repeat aria-label="Down">↓</button>
+        <button class="cap" data-vk="39" data-repeat aria-label="Right">→</button>
+        <button class="cap" data-vk="36">home</button>
+        <button class="cap" data-vk="35">end</button>
+        <button class="cap" data-vk="46" data-repeat>del</button>
+        <button class="cap" data-vk="8" data-repeat aria-label="Backspace">⌫</button>
+        <button class="cap" data-vk="13" aria-label="Enter">⏎</button>
+      </div>
+    </section>
+
+    <!-- TOUCH -->
+    <section class="mode" id="mode-touch" aria-label="Trackpad">
+      <div class="pad-wrap">
+        <div id="pad" class="pad">
+          <div class="pad-hint">
+            <b>Slide to move. Tap to click.</b>
+            <span>Two fingers scroll · two-finger tap right-clicks · double-tap and hold to drag</span>
+          </div>
+        </div>
+        <div id="strip" class="strip" aria-label="Scroll strip"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="buttons">
+        <button data-button="0">left</button>
+        <button data-button="2" aria-label="Middle click">mid</button>
+        <button data-button="1">right</button>
+      </div>
+    </section>
+
+    <!-- MEDIA & WIND DOWN -->
+    <section class="mode" id="mode-media" aria-label="Media and wind down">
+      <div class="scroll">
+        <div class="transport">
+          <button class="ctl" data-vk="177" aria-label="Previous"><svg><use href="#i-prev"/></svg></button>
+          <button class="ctl play" data-vk="179" aria-label="Play or pause"><svg><use href="#i-playpause"/></svg></button>
+          <button class="ctl" data-vk="176" aria-label="Next"><svg><use href="#i-next"/></svg></button>
+        </div>
+        <div class="row3">
+          <button class="slab" data-vk="37" data-repeat><svg><use href="#i-back"/></svg>5s back</button>
+          <button class="slab" data-vk="70"><svg><use href="#i-full"/></svg>full screen</button>
+          <button class="slab" data-vk="39" data-repeat><svg><use href="#i-fwd"/></svg>5s on</button>
+        </div>
+        <div class="row3">
+          <button class="slab" data-vk="174" data-repeat><svg><use href="#i-voldown"/></svg>quieter</button>
+          <button class="slab" data-vk="173"><svg><use href="#i-mute"/></svg>mute</button>
+          <button class="slab" data-vk="175" data-repeat><svg><use href="#i-volup"/></svg>louder</button>
+        </div>
+
+        <div class="winddown" id="winddown">
+          <h2>Wind down</h2>
+          <p class="wd-sub" id="timer-status">Drifting off mid-episode? Your PC can follow you to sleep.</p>
+          <div class="timer-row" role="group" aria-label="Sleep timer">
+            <button class="tick" data-min="15">15</button>
+            <button class="tick" data-min="30">30</button>
+            <button class="tick" data-min="45">45</button>
+            <button class="tick" data-min="60">60</button>
+            <button class="tick" data-min="90">90</button>
+            <button class="tick" data-min="120">120</button>
+            <span class="tick-unit">min</span>
+          </div>
+          <button id="timer-cancel" class="text-btn" hidden>Cancel the timer</button>
+          <div class="row3 bed">
+            <button class="slab" data-action="2"><svg><use href="#i-display"/></svg><span>screen off</span></button>
+            <button class="slab" data-action="1"><svg><use href="#i-lock"/></svg><span>lock</span></button>
+            <button class="slab warm" data-action="3" data-confirm><svg><use href="#i-sleep"/></svg><span>sleep now</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KEYS -->
+    <section class="mode" id="mode-keys" aria-label="Shortcuts">
+      <div class="scroll">
+        <h2>Everyday</h2>
+        <div class="kgrid">
+          <button class="k" data-vk="67" data-mods="1"><b>Copy</b><i data-sc="ctrl c" data-mac-sc="⌘ c"></i></button>
+          <button class="k" data-vk="86" data-mods="1"><b>Paste</b><i data-sc="ctrl v" data-mac-sc="⌘ v"></i></button>
+          <button class="k" data-vk="88" data-mods="1"><b>Cut</b><i data-sc="ctrl x" data-mac-sc="⌘ x"></i></button>
+          <button class="k" data-vk="65" data-mods="1"><b>Select all</b><i data-sc="ctrl a" data-mac-sc="⌘ a"></i></button>
+          <button class="k" data-vk="90" data-mods="1"><b>Undo</b><i data-sc="ctrl z" data-mac-sc="⌘ z"></i></button>
+          <button class="k" data-vk="89" data-mods="1" data-mac="90,3"><b>Redo</b><i data-sc="ctrl y" data-mac-sc="⌘ ⇧ z"></i></button>
+          <button class="k" data-vk="83" data-mods="1"><b>Save</b><i data-sc="ctrl s" data-mac-sc="⌘ s"></i></button>
+          <button class="k" data-vk="70" data-mods="1"><b>Find</b><i data-sc="ctrl f" data-mac-sc="⌘ f"></i></button>
+        </div>
+
+        <h2>Browser</h2>
+        <div class="kgrid">
+          <button class="k" data-vk="84" data-mods="1"><b>New tab</b><i data-sc="ctrl t" data-mac-sc="⌘ t"></i></button>
+          <button class="k" data-vk="87" data-mods="1"><b>Close tab</b><i data-sc="ctrl w" data-mac-sc="⌘ w"></i></button>
+          <button class="k" data-vk="84" data-mods="3"><b>Reopen tab</b><i data-sc="ctrl ⇧ t" data-mac-sc="⌘ ⇧ t"></i></button>
+          <button class="k" data-vk="9" data-mods="1" data-mac="9,8"><b>Next tab</b><i data-sc="ctrl tab" data-mac-sc="⌃ tab"></i></button>
+          <button class="k" data-vk="37" data-mods="4" data-mac="219,1"><b>Back</b><i data-sc="alt ←" data-mac-sc="⌘ ["></i></button>
+          <button class="k" data-vk="116" data-mac="82,1"><b>Reload</b><i data-sc="f5" data-mac-sc="⌘ r"></i></button>
+          <button class="k" data-vk="187" data-mods="1"><b>Zoom in</b><i data-sc="ctrl +" data-mac-sc="⌘ +"></i></button>
+          <button class="k" data-vk="189" data-mods="1"><b>Zoom out</b><i data-sc="ctrl −" data-mac-sc="⌘ −"></i></button>
+        </div>
+
+        <h2 data-mac-label="Mac">Windows</h2>
+        <div class="kgrid">
+          <button class="k" data-vk="91" data-mac="32,1"><b data-mac-label="Spotlight">Start</b><i data-sc="win" data-mac-sc="⌘ space"></i></button>
+          <button class="k" data-vk="9" data-mods="4" data-mac="9,1"><b>Switch app</b><i data-sc="alt tab" data-mac-sc="⌘ tab"></i></button>
+          <button class="k" data-vk="68" data-mods="8" data-mac="122,0"><b>Desktop</b><i data-sc="win d" data-mac-sc="f11"></i></button>
+          <button class="k" data-vk="9" data-mods="8" data-mac="38,8"><b data-mac-label="Mission Control">Task view</b><i data-sc="win tab" data-mac-sc="⌃ ↑"></i></button>
+          <button class="k" data-vk="38" data-mods="8" data-mac="70,9"><b data-mac-label="Full screen">Maximize</b><i data-sc="win ↑" data-mac-sc="⌃ ⌘ f"></i></button>
+          <button class="k" data-vk="40" data-mods="8" data-mac="77,1"><b>Minimize</b><i data-sc="win ↓" data-mac-sc="⌘ m"></i></button>
+          <button class="k" data-vk="187" data-mods="8" data-mac="56,5"><b data-mac-label="Zoom">Magnifier</b><i data-sc="win +" data-mac-sc="⌥ ⌘ 8"></i></button>
+          <button class="k hot" data-vk="115" data-mods="4" data-mac="81,1" data-confirm><b data-mac-label="Quit app">Close app</b><i data-sc="alt f4" data-mac-sc="⌘ q"></i></button>
+        </div>
+
+        <h2>Present</h2>
+        <div class="present">
+          <button class="k big" data-vk="33" data-repeat><b>← Back</b></button>
+          <button class="k big" data-vk="34" data-repeat><b>Next →</b></button>
+        </div>
+        <div class="kgrid">
+          <button class="k" data-vk="116" data-mac="13,3"><b>Start show</b><i data-sc="f5" data-mac-sc="⌘ ⇧ ⏎"></i></button>
+          <button class="k" data-vk="116" data-mods="2" data-mac="13,1"><b>From here</b><i data-sc="⇧ f5" data-mac-sc="⌘ ⏎"></i></button>
+          <button class="k" data-vk="66"><b>Blackout</b><i data-sc="b" data-mac-sc="b"></i></button>
+          <button class="k" data-vk="27"><b>End show</b><i data-sc="esc" data-mac-sc="esc"></i></button>
+        </div>
+
+        <h2>Function</h2>
+        <div class="fgrid">
+          <button class="cap" data-vk="112">f1</button><button class="cap" data-vk="113">f2</button>
+          <button class="cap" data-vk="114">f3</button><button class="cap" data-vk="115">f4</button>
+          <button class="cap" data-vk="116">f5</button><button class="cap" data-vk="117">f6</button>
+          <button class="cap" data-vk="118">f7</button><button class="cap" data-vk="119">f8</button>
+          <button class="cap" data-vk="120">f9</button><button class="cap" data-vk="121">f10</button>
+          <button class="cap" data-vk="122">f11</button><button class="cap" data-vk="123">f12</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="modes" aria-label="Modes">
+    <button data-mode="type"><svg><use href="#i-type"/></svg><span>Type</span></button>
+    <button data-mode="touch"><svg><use href="#i-touch"/></svg><span>Touch</span></button>
+    <button data-mode="media"><svg><use href="#i-media"/></svg><span>Media</span></button>
+    <button data-mode="keys"><svg><use href="#i-keys"/></svg><span>Keys</span></button>
+  </nav>
+</div>
+
+<canvas id="sparks" class="sparks" aria-hidden="true"></canvas>
+
+<!-- The rift is closed: not paired, revoked, replaced, kicked. -->
+<div id="sealed" class="sealed" hidden>
+  <div class="sealed-there"><span>there</span></div>
+  <div class="sealed-line"></div>
+  <div class="sealed-here">
+    <svg class="sealed-icon"><use href="#i-camera"/></svg>
+    <h1 id="sealed-title"></h1>
+    <p id="sealed-text"></p>
+    <button id="sealed-action" class="cta" hidden></button>
+  </div>
+</div>
+
+<!-- First run: the story of the name. -->
+<div id="story" class="story" hidden data-step="0">
+  <div class="story-there"><span class="story-word">there</span><p class="story-cap">your desk · your screen</p></div>
+  <svg class="story-seam" id="story-seam" viewBox="0 0 400 80" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="storyLight" x1="0" x2="1">
+        <stop offset="0" stop-color="#FFD25E"/><stop offset="0.5" stop-color="#FF7A3D"/><stop offset="1" stop-color="#FF3D7F"/>
+      </linearGradient>
+      <filter id="storyGlow" x="-5%" y="-200%" width="110%" height="500%"><feGaussianBlur stdDeviation="7"/></filter>
+    </defs>
+    <path id="story-glow" fill="url(#storyLight)" filter="url(#storyGlow)"/>
+    <path id="story-tear" fill="url(#storyLight)"/>
+  </svg>
+  <div class="story-here">
+    <span class="story-word">here</span><p class="story-cap">your bed · your couch · your hand</p>
+    <div class="story-text">
+      <p data-step="0"><b>Two places.</b> Your computer is <em>there</em>. You're <em>here</em>, finally comfortable.</p>
+      <p data-step="1"><b>RIFT tears a seam between them.</b> A private opening from your phone straight to your screen.</p>
+      <p data-step="2"><b>Reach through.</b> Type, point, peek at your screen, wind it down for the night. Without getting up.</p>
+    </div>
+    <div class="story-foot">
+      <button id="story-skip" class="text-btn">Skip</button>
+      <button id="story-next" class="cta">Next</button>
+    </div>
+  </div>
+</div>
+
+<dialog id="settings">
+  <form method="dialog">
+    <h1>Settings</h1>
+    <div class="field">
+      <span>Look</span>
+      <div class="seg" role="radiogroup" id="theme-seg">
+        <button type="button" role="radio" data-theme-opt="auto">Auto</button>
+        <button type="button" role="radio" data-theme-opt="night">Night</button>
+        <button type="button" role="radio" data-theme-opt="day">Day</button>
+      </div>
+    </div>
+    <label class="field range">
+      <span>Pointer speed <output id="sens-out"></output></span>
+      <input type="range" id="sens" min="0.4" max="2.5" step="0.1">
+    </label>
+    <label class="field range">
+      <span>Scroll speed <output id="scroll-out"></output></span>
+      <input type="range" id="scroll" min="0.3" max="3" step="0.1">
+    </label>
+    <div class="field">
+      <span>View quality</span>
+      <div class="seg" role="radiogroup" id="quality-seg">
+        <button type="button" role="radio" data-quality="saver">Saver</button>
+        <button type="button" role="radio" data-quality="balanced">Balanced</button>
+        <button type="button" role="radio" data-quality="crisp">Crisp</button>
+      </div>
+    </div>
+    <label class="toggle"><span>Natural scrolling</span><input type="checkbox" id="natural"></label>
+    <label class="toggle"><span>Smart typing<small>Autocorrect, suggestions and swipe</small></span><input type="checkbox" id="smart"></label>
+    <label class="toggle"><span>Left-handed<small>Scroll strip on the left</small></span><input type="checkbox" id="lefty"></label>
+    <label class="toggle"><span>Haptics</span><input type="checkbox" id="haptics"></label>
+    <label class="field">
+      <span>This phone's name</span>
+      <input type="text" id="device-name" maxlength="40" autocomplete="off">
+    </label>
+    <div class="dialog-actions">
+      <button type="button" id="replay-story" class="text-btn">Replay the story</button>
+      <button type="button" id="forget" class="text-btn hot">Forget this computer</button>
+    </div>
+    <button value="close" class="cta wide">Done</button>
+    <p class="fineprint">End-to-end encrypted. Your pairing key never leaves your devices.</p>
+  </form>
+</dialog>
+
+</body>
+</html>
