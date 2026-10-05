@@ -42,7 +42,7 @@ Plus: a story-driven first run, day and night themes, a left-handed mode, haptic
 
 ## 🚀 Getting started
 
-1. Download from [Releases](https://github.com/HarshalPatel1972/rift/releases): **RIFT_Setup.exe** (Windows) or **RIFT.dmg** (macOS 11+, drag RIFT to Applications).
+1. Download from [Releases](https://github.com/HarshalPatel1972/rift/releases): **RIFT_Setup.exe** (Windows) or **RIFT.dmg** (macOS 12.3+, drag RIFT to Applications).
 2. Open RIFT. Scan the QR code with your phone's camera (same Wi-Fi).
 3. Lean back. 🛋️
 

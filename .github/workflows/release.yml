@@ -12,6 +12,7 @@ jobs:
     name: Vet & test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false # one OS failing shouldn't hide the others' results
       matrix:
         # Windows and macOS are the shipped hosts (macOS is the only place
         # the cgo/Objective-C code compiles); Linux keeps the core portable.

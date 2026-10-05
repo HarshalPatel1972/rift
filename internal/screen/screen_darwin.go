@@ -3,8 +3,8 @@
 package screen
 
 /*
-#cgo CFLAGS: -x objective-c -fobjc-arc -mmacosx-version-min=11.0
-#cgo LDFLAGS: -framework CoreGraphics -framework ApplicationServices -framework Foundation -weak_framework ScreenCaptureKit
+#cgo CFLAGS: -x objective-c -fobjc-arc -mmacosx-version-min=12.3
+#cgo LDFLAGS: -framework CoreGraphics -framework ApplicationServices -framework Foundation -framework ScreenCaptureKit
 
 #import <Foundation/Foundation.h>
 #import <ApplicationServices/ApplicationServices.h>

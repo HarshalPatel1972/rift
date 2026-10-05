@@ -18,7 +18,7 @@ cd "$(dirname "$0")/../.."
 VERSION="${VERSION:-2.0.0}"
 OUT=build/macos
 APP="$OUT/RIFT.app"
-export MACOSX_DEPLOYMENT_TARGET=11.0
+export MACOSX_DEPLOYMENT_TARGET=12.3
 export CGO_ENABLED=1
 
 rm -rf "$OUT"
@@ -57,7 +57,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>${VERSION}</string>
   <key>CFBundleVersion</key><string>${VERSION}</string>
-  <key>LSMinimumSystemVersion</key><string>11.0</string>
+  <key>LSMinimumSystemVersion</key><string>12.3</string>
   <!-- Menu-bar app: no Dock icon. -->
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
