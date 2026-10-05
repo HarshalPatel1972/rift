@@ -226,6 +226,7 @@ export function send(op, payload) {
   // Under backpressure, drop pointer motion rather than queueing stale moves.
   if ((op === OP.MOVE || op === OP.POINT) && conn.ws.bufferedAmount > 64 * 1024) return false;
   sendFrame(op, payload);
+  link.emit('sent', op);
   return true;
 }
 

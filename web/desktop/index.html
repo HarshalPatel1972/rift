@@ -6,104 +6,112 @@
 <meta name="color-scheme" content="dark light">
 <title>RIFT</title>
 <link rel="icon" href="/icon.png">
-<link rel="preload" href="fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app.css">
-<script src="app.js" defer></script>
+<script type="module" src="app.js"></script>
 </head>
-<body>
-<canvas id="sky" aria-hidden="true"></canvas>
+<body data-state="ready">
 
-<main class="shell">
-  <header class="brand">
-    <div class="logo">rift<span class="logo-dot"></span></div>
-    <div id="status" class="status" data-state="starting"><span class="status-dot"></span><span id="status-text">Starting…</span></div>
-  </header>
+<main class="split">
+  <!-- HERE: this computer -->
+  <section class="side">
+    <header class="brand">
+      <img src="/icon.png" alt="" class="mark">
+      <span class="word">rift</span>
+      <span id="status" class="status"><i></i><span id="status-text">starting</span></span>
+    </header>
 
-  <!-- macOS: grant permissions first -->
-  <section id="perms" class="perms" hidden>
-    <h2>Two quick switches 🔑</h2>
-    <p class="perms-sub">macOS asks before any app can type or show your screen. Flip RIFT on in System Settings — this updates by itself.</p>
-    <div class="perm" data-kind="input">
-      <span class="perm-ico">⌨️</span>
-      <div><b>Accessibility</b><small>So your phone can type and click</small></div>
-      <button class="mini-btn">Allow</button>
-    </div>
-    <div class="perm" data-kind="screen">
-      <span class="perm-ico">👀</span>
-      <div><b>Screen Recording</b><small>Only for Peek — skip it if you like</small></div>
-      <button class="mini-btn">Allow</button>
-    </div>
+    <!-- macOS: grant permissions first -->
+    <section id="perms" class="perms" hidden>
+      <p class="kicker">two switches first</p>
+      <p class="perms-sub">macOS asks before any app can type or show your screen. Flip RIFT on in System Settings; this updates by itself.</p>
+      <div class="perm" data-kind="input">
+        <div><b>Accessibility</b><small>so your phone can type and click</small></div>
+        <button class="btn small">Allow</button>
+      </div>
+      <div class="perm" data-kind="screen">
+        <div><b>Screen Recording</b><small>only for the live view, so it's optional</small></div>
+        <button class="btn small">Allow</button>
+      </div>
+    </section>
+
+    <!-- Waiting for a phone -->
+    <section id="pair" class="pane">
+      <p class="kicker" id="pair-kicker">open a rift</p>
+      <h1 id="pair-title">Your desk<br>can wait.</h1>
+      <p class="lede" id="pair-sub">Scan the code with your phone's camera. A seam opens between your bed and this screen, so you can type, point, peek and wind down without getting up.</p>
+      <ol class="steps">
+        <li><span>01</span>Open the camera</li>
+        <li><span>02</span>Point it at the rift</li>
+        <li><span>03</span>Go get comfortable</li>
+      </ol>
+      <div class="pair-extra">
+        <button id="copy" class="linkbox" title="Copy link"><span id="link" class="link"></span><span id="copy-label" class="copy">copy</span></button>
+        <label id="net-row" class="net" hidden><span>network</span><select id="net"></select></label>
+      </div>
+      <p id="offline" class="note" hidden>No network found. Connect this PC to Wi‑Fi or Ethernet; your phone must be on the same network.</p>
+    </section>
+
+    <!-- A phone is through -->
+    <section id="live" class="pane" hidden>
+      <p class="kicker">rift open to <b id="device"></b></p>
+      <h1>You're<br>elsewhere now.</h1>
+      <p class="lede">Everything your phone sends lands here. Go get comfortable.</p>
+
+      <div id="peeking" class="peeking" hidden>
+        <i class="rec"></i><span>Your phone can see this screen</span>
+        <button id="stop-peek" class="btn small">Close the view</button>
+      </div>
+      <div id="timer" class="timer" hidden>
+        <span>Sleeping in <b id="timer-left"></b></span>
+        <button id="timer-cancel" class="btn small">Stay awake</button>
+      </div>
+
+      <dl class="stats">
+        <div><dt>latency</dt><dd id="rtt">—</dd></div>
+        <div><dt>inputs</dt><dd id="events">0</dd></div>
+        <div><dt>open for</dt><dd id="since">—</dd></div>
+      </dl>
+      <div class="row">
+        <button id="pause" class="btn">Freeze input</button>
+        <button id="disconnect" class="btn">Close the rift</button>
+      </div>
+      <button id="show-qr" class="text-btn">Open a rift to another phone</button>
+    </section>
+
+    <p id="warning" class="note warn" hidden></p>
+
+    <details class="more">
+      <summary>Settings</summary>
+      <label class="toggle"><span>Let my phone see this screen<small>The live view. You'll always see when it's open.</small></span><input type="checkbox" id="allow-peek"></label>
+      <label class="toggle"><span>Open RIFT when you log in</span><input type="checkbox" id="autostart"></label>
+      <div class="more-actions">
+        <button id="rotate" class="btn small">Seal every rift</button>
+        <button id="quit" class="btn small hot">Quit RIFT</button>
+      </div>
+      <p class="fine">Closing this window keeps RIFT in the tray. Sealing makes a new pairing code, so every phone must scan again. All traffic is end‑to‑end encrypted and stays on your network.</p>
+    </details>
   </section>
 
-  <!-- Waiting for a phone: the story + QR -->
-  <section id="pair" class="pair">
-    <h1 id="pair-title">Your PC,<br>from your pillow.</h1>
-    <p id="pair-sub" class="lede">Scan once. Then type, click, scroll and peek at this screen from anywhere comfy.</p>
-
-    <div class="qr-card">
-      <img id="qr" alt="Pairing QR code">
-      <span class="qr-badge">📱 scan me</span>
-    </div>
-
-    <ol class="steps">
-      <li><span>📷</span>Open your phone's camera</li>
-      <li><span>🎯</span>Point it at the code</li>
-      <li><span>🛋️</span>Lean back</li>
-    </ol>
-
-    <div class="pair-extra">
-      <button id="copy" class="linkbox" title="Copy link">
-        <span id="link" class="link"></span>
-        <span id="copy-label" class="copy">Copy link</span>
-      </button>
-      <label id="net-row" class="net" hidden>
-        <span>Network</span>
-        <select id="net"></select>
-      </label>
-      <p id="offline" class="warn-box" hidden>📡 No network found. Connect this PC to Wi‑Fi or Ethernet — your phone must be on the same network.</p>
+  <!-- THERE (for your phone): the rift itself -->
+  <section class="rift" id="rift" aria-label="The rift">
+    <svg class="tear" id="tear-svg" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="light" x1="0" y1="0" x2="1" y2="0"><!-- horizontal before the quarter turn = top-to-bottom on screen -->
+          <stop offset="0" class="s1"/><stop offset="0.5" class="s2"/><stop offset="1" class="s3"/>
+        </linearGradient>
+        <filter id="bloom" x="-300%" y="-5%" width="700%" height="110%"><feGaussianBlur stdDeviation="16"/></filter>
+      </defs>
+      <path id="tear-glow" fill="url(#light)" filter="url(#bloom)"/>
+      <path id="tear-body" fill="url(#light)"/>
+      <path id="tear-core" fill="none"/>
+    </svg>
+    <canvas id="sparks" aria-hidden="true"></canvas>
+    <div class="qr" id="qr-card">
+      <img id="qr" alt="Pairing code">
+      <span class="qr-cap">scan to open</span>
     </div>
   </section>
-
-  <!-- A phone is connected -->
-  <section id="live" class="live" hidden>
-    <h1>You're free. <span class="wave">🛋️</span></h1>
-    <p class="lede">Go get comfy — <b id="device"></b> is driving now.</p>
-
-    <div id="peeking" class="peeking" hidden>
-      <span class="rec"></span> Your phone is viewing this screen
-      <button id="stop-peek" class="mini-btn">Turn off Peek</button>
-    </div>
-
-    <div class="stats">
-      <div class="stat c-mint"><b id="rtt">—</b><span>latency</span></div>
-      <div class="stat c-grape"><b id="events">0</b><span>inputs</span></div>
-      <div class="stat c-sky"><b id="since">—</b><span>connected</span></div>
-    </div>
-
-    <div id="timer" class="timer" hidden>
-      <span>🌙 Sleeping in <b id="timer-left"></b></span>
-      <button id="timer-cancel" class="mini-btn">Cancel</button>
-    </div>
-
-    <div class="row">
-      <button id="pause" class="btn">⏸ Pause input</button>
-      <button id="disconnect" class="btn">👋 Disconnect</button>
-    </div>
-    <button id="show-qr" class="text-btn">Pair a different phone</button>
-  </section>
-
-  <div id="warning" class="warn-box" hidden></div>
-
-  <details class="more">
-    <summary>Settings</summary>
-    <label class="toggle"><span>Let my phone see this screen<small>Screen Peek — you'll always see when it's on</small></span><input type="checkbox" id="allow-peek"></label>
-    <label class="toggle"><span>Launch RIFT when you log in</span><input type="checkbox" id="autostart"></label>
-    <div class="more-actions">
-      <button id="rotate" class="btn small">🔑 New pairing code</button>
-      <button id="quit" class="btn small danger">Quit RIFT</button>
-    </div>
-    <p class="fine">Closing this window keeps RIFT in the tray. A new pairing code unpairs every phone. Everything is end‑to‑end encrypted and never leaves your network.</p>
-  </details>
 </main>
 </body>
 </html>

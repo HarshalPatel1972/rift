@@ -1,7 +1,8 @@
-// Chill: media + bedtime (sleep timer, screen off, lock, sleep).
+// Media and wind down: transport, sleep timer, screen off, lock, sleep.
 import { $, $$, haptic, pc } from './util.js';
 import { ACTION, FLAG, link, sendAction } from './link.js';
 import { bindPress } from './press.js';
+import { setLabel } from './seam.js';
 
 let endsAt = 0; // ms timestamp the PC will sleep at, 0 = no timer
 let tick = 0;
@@ -16,19 +17,18 @@ function fmt(secs) {
 function render() {
   const left = endsAt ? Math.max(0, Math.round((endsAt - Date.now()) / 1000)) : 0;
   const status = $('#timer-status');
-  $('#pill-timer').hidden = !left;
   $('#timer-cancel').hidden = !left;
+  setLabel('timer', left ? `sleep in ${fmt(left)}` : null);
   if (left) {
-    $('#pill-timer-left').textContent = fmt(left);
-    status.replaceChildren(pc('Your PC goes to sleep in '), Object.assign(document.createElement('b'), { textContent: fmt(left) }), '. Sweet dreams.');
+    status.replaceChildren(pc('Your PC sleeps in '), Object.assign(document.createElement('b'), { textContent: fmt(left) }), '. Sleep well.');
   } else {
-    status.textContent = pc("Fall asleep watching? We'll put your PC to sleep.");
-    $$('.tchip').forEach((c) => c.classList.remove('on'));
+    status.textContent = pc('Drifting off mid-episode? Your PC can follow you to sleep.');
+    $$('.tick').forEach((c) => c.classList.remove('on'));
   }
 }
 
 function onPing({ flags, timer }) {
-  $('#bedtime').hidden = !(flags & FLAG.POWER);
+  $('#winddown').hidden = !(flags & FLAG.POWER);
   // Re-sync with the PC's clock; small drift doesn't matter.
   const next = timer ? Date.now() + timer * 1000 : 0;
   if (Math.abs(next - endsAt) > 2000 || !next !== !endsAt) endsAt = next;
@@ -40,12 +40,12 @@ function onPing({ flags, timer }) {
 export function initChill() {
   link.on('ping', onPing);
 
-  $$('.tchip').forEach((c) => {
+  $$('.tick').forEach((c) => {
     c.addEventListener('click', () => {
       const min = Number(c.dataset.min);
       sendAction(ACTION.SLEEP_TIMER, min);
       haptic(12);
-      $$('.tchip').forEach((x) => x.classList.toggle('on', x === c));
+      $$('.tick').forEach((x) => x.classList.toggle('on', x === c));
       endsAt = Date.now() + min * 60000;
       clearInterval(tick);
       tick = setInterval(render, 1000);
@@ -57,7 +57,6 @@ export function initChill() {
     endsAt = 0;
     render();
   });
-  $('#pill-timer').addEventListener('click', () => document.querySelector('.dock [data-view="chill"]').click());
 
   $$('[data-action]').forEach((el) => {
     bindPress(el, () => sendAction(Number(el.dataset.action)));

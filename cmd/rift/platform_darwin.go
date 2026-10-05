@@ -23,7 +23,7 @@ const (
 func openWindow(url string) {
 	for _, app := range []string{"Google Chrome", "Microsoft Edge", "Brave Browser", "Arc"} {
 		if _, err := os.Stat(filepath.Join("/Applications", app+".app")); err == nil {
-			cmd := exec.Command("/usr/bin/open", "-na", app, "--args", "--app="+url, "--window-size=460,820")
+			cmd := exec.Command("/usr/bin/open", "-na", app, "--args", "--app="+url, "--window-size=900,600")
 			if err := cmd.Start(); err == nil {
 				go cmd.Wait()
 				return

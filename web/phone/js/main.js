@@ -1,44 +1,49 @@
-// RIFT phone app: wiring, views and connection states.
+// RIFT phone app: modes, the rift's states, and wiring.
 import { $, $$, haptic, pc, prefs, savePrefs } from './util.js';
 import { FLAG, connect, forgetPairing, hasKey, link, loadPairingKey, resume, useKey } from './link.js';
 import { applyHostOS, bindKeys } from './press.js';
 import { clearMods, editor, initTyping, latchedMods } from './typing.js';
 import { initTrackpad } from './trackpad.js';
-import { initPeek, peekState, setPeekView } from './peek.js';
+import { initSeam, setLabel, setSeamMode } from './seam.js';
+import { initPortal, portalState, refreshPortal, setPortalMode } from './portal.js';
+import { initSparks } from './sparks.js';
 import { initChill } from './chill.js';
 import { initStory, showStory, storySeen } from './story.js';
 import { initSettings } from './settings.js';
 
-const VIEWS = ['type', 'pad', 'peek', 'chill', 'keys'];
+const MODES = ['type', 'touch', 'media', 'keys'];
 
-/* ---------------------------------------------------------------- views */
+/* ---------------------------------------------------------------- modes */
 
-function setView(view, { focus = true } = {}) {
-  if (!VIEWS.includes(view)) view = 'type';
-  prefs.view = view;
+function setMode(mode, { focus = true } = {}) {
+  if (!MODES.includes(mode)) mode = 'type';
+  prefs.mode = mode;
   savePrefs();
-  document.body.dataset.view = view;
-  $$('.dock button').forEach((b) => b.toggleAttribute('aria-current', b.dataset.view === view));
-  $$('.dock button[aria-current]').forEach((b) => b.setAttribute('aria-current', 'page'));
-  if (view === 'type' && focus) editor.focus();
+  document.body.dataset.mode = mode;
+  $$('.modes button').forEach((b) => {
+    if (b.dataset.mode === mode) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+  if (mode === 'type' && focus) editor.focus();
   else editor.blur();
-  setPeekView(view);
+  setSeamMode(mode);
+  setPortalMode(mode);
 }
 
 // Switch on pointerup rather than waiting for a synthesized click, which
 // browsers sometimes drop after complex touch gestures; click stays for
 // keyboards and screen readers.
-$$('.dock button').forEach((b) => {
+$$('.modes button').forEach((b) => {
   const go = () => {
-    if (document.body.dataset.view === b.dataset.view) return;
+    if (document.body.dataset.mode === b.dataset.mode) return;
     haptic(6);
-    setView(b.dataset.view);
+    setMode(b.dataset.mode);
   };
   b.addEventListener('pointerup', (e) => { if (e.isPrimary) go(); });
   b.addEventListener('click', go);
 });
 
-// Hide the dock while the soft keyboard is up, to give typing the room.
+// Hide the mode bar while the soft keyboard is up, to give typing the room.
 if (window.visualViewport) {
   let tallest = visualViewport.height;
   const check = () => {
@@ -51,89 +56,108 @@ if (window.visualViewport) {
   editor.addEventListener('focus', () => setTimeout(check, 350));
 }
 
-/* --------------------------------------------------------------- status */
+/* ------------------------------------------------- the rift's condition
+ * body[data-link] drives the seam's light:
+ *   connected · weak (slow link) · connecting · paused (frozen) · offline */
 
-link.on('status', (state, text) => {
-  $('#conn').dataset.state = state;
-  $('#conn-text').textContent = state === 'connected' ? `On ${text}` : text;
-  if (state !== 'connected') $('#conn-rtt').hidden = true;
+let state = 'connecting';
+let rtt = 0;
+let paused = false;
+
+function renderLink() {
+  let s = state;
+  if (s === 'connected' && paused) s = 'paused';
+  else if (s === 'connected' && rtt > 150) s = 'weak';
+  document.body.dataset.link = s;
+  setLabel('paused', paused && state === 'connected' ? 'input paused' : null);
+  setLabel('reconnect', state === 'connecting' && link.host ? 'reopening…' : null);
+  $('#where-label').textContent = {
+    connected: 'rift open to', weak: 'rift open to', paused: 'rift frozen at', connecting: 'reaching', offline: 'rift closed',
+  }[s];
+}
+
+link.on('status', (st, text) => {
+  state = st === 'connected' ? 'connected' : st === 'connecting' ? 'connecting' : 'offline';
+  if (st === 'connected') $('#host').textContent = text;
+  else if (!link.host) $('#host').textContent = text;
+  if (st !== 'connected') $('#rtt').hidden = true;
+  renderLink();
 });
 
-link.on('ping', ({ rtt, flags }) => {
-  const el = $('#conn-rtt');
-  if (rtt) {
-    el.hidden = false;
-    el.textContent = `${rtt} ms`;
-    el.className = 'conn-rtt' + (rtt > 120 ? ' bad' : rtt > 40 ? ' warn' : '');
-  }
-  $('#pill-paused').hidden = !(flags & FLAG.PAUSED);
+link.on('ping', ({ rtt: r, flags }) => {
+  paused = !!(flags & FLAG.PAUSED);
   applyHostOS(!!(flags & FLAG.MAC));
+  if (r) {
+    rtt = r;
+    const el = $('#rtt');
+    el.hidden = false;
+    el.textContent = `${r}ms`;
+    el.className = 'rtt' + (r > 150 ? ' bad' : r > 60 ? ' warn' : '');
+  }
+  renderLink();
 });
 
-/* -------------------------------------------------------------- overlay */
+/* --------------------------------------------- sealed: no open rift */
 
-const OVERLAYS = {
+const SEALED = {
   nokey: {
-    art: '📷',
-    title: 'Point. Scan. Relax.',
-    text: 'Open RIFT on your computer and scan its QR code with your camera. That’s the whole setup.',
+    title: 'The rift is closed.',
+    text: 'Open RIFT on your computer and scan its code with your camera. That opens it.',
   },
   unpaired: {
-    art: '🔑',
-    title: 'New pairing code',
-    text: 'Your PC made a fresh code, so this phone needs to scan it again.',
+    title: 'This rift was sealed.',
+    text: 'Your PC made a new pairing code. Scan it again to reopen the rift.',
   },
   replaced: {
-    art: '🤝',
-    title: 'Another phone took over',
-    text: 'Someone else is driving your PC right now.',
-    action: 'Take back control',
+    title: 'Another phone reached through.',
+    text: 'Someone else opened a rift to your PC, so this one closed.',
+    action: 'Take it back',
   },
   kicked: {
-    art: '👋',
-    title: 'Disconnected',
+    title: 'Closed from the other side.',
     text: 'Your PC ended this session.',
-    action: 'Reconnect',
+    action: 'Reopen the rift',
   },
 };
 
-function showOverlay(kind) {
-  const o = OVERLAYS[kind];
-  $('#overlay-art').textContent = o.art;
-  $('#overlay-title').textContent = pc(o.title);
-  $('#overlay-text').textContent = pc(o.text);
-  const btn = $('#overlay-action');
+function seal(kind) {
+  const o = SEALED[kind];
+  $('#sealed-title').textContent = pc(o.title);
+  $('#sealed-text').textContent = pc(o.text);
+  const btn = $('#sealed-action');
   btn.hidden = !o.action;
   btn.textContent = o.action || '';
-  $('#overlay').hidden = false;
+  $('#sealed').hidden = false;
   editor.blur();
 }
 
-$('#overlay-action').addEventListener('click', () => {
-  $('#overlay').hidden = true;
+$('#sealed-action').addEventListener('click', () => {
+  $('#sealed').hidden = true;
   resume();
 });
 
-link.on('stopped', showOverlay);
+link.on('stopped', seal);
 link.on('ready', () => {
-  $('#overlay').hidden = true;
-  if (!storySeen()) showStory(() => setView(prefs.view));
+  $('#sealed').hidden = true;
+  if (!storySeen()) showStory(() => setMode(prefs.mode));
 });
 
 /* ----------------------------------------------------------------- boot */
 
 initTyping();
 initTrackpad();
-initPeek();
+initSeam(refreshPortal);
+initPortal();
+initSparks();
 initChill();
 initStory();
 initSettings({
   onForget() {
     forgetPairing();
-    showOverlay('nokey');
+    seal('nokey');
   },
   onReplay() {
-    showStory(() => setView(prefs.view));
+    showStory(() => setMode(prefs.mode));
   },
 });
 bindKeys(
@@ -141,16 +165,17 @@ bindKeys(
   (el) => { if (el.closest('#keyrow') && latchedMods()) clearMods(); },
 );
 
-setView(prefs.view, { focus: false });
+setMode(MODES.includes(prefs.mode) ? prefs.mode : 'type', { focus: false });
+renderLink();
 
 const pairing = loadPairingKey();
 if (!pairing) {
-  link.emit('status', 'offline', 'Not paired');
-  showOverlay('nokey');
+  link.emit('status', 'offline', 'not paired');
+  seal('nokey');
 } else {
   useKey(pairing);
   connect();
 }
 
 // Exposed for debugging from the console.
-window.rift = { link, hasKey, peek: peekState };
+window.rift = { link, hasKey, portal: portalState };

@@ -8,6 +8,9 @@ export function keepFocus(el) {
   el.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
+// The text part of a button: its <b> or <span> if it has one.
+const labelOf = (el) => el.querySelector('b, span') || el.lastChild;
+
 /* Tap fires on release, so swiping across a scrollable row of keys doesn't
  * press them (the browser sends pointercancel when it starts scrolling).
  * data-repeat keys auto-repeat while held; data-confirm needs a second tap. */
@@ -40,7 +43,7 @@ export function bindPress(el, fire) {
     if (el.hasAttribute('data-confirm') && !el.classList.contains('armed')) {
       el.classList.add('armed');
       haptic(20);
-      const label = el.lastChild;
+      const label = labelOf(el);
       el.dataset.label ??= label.textContent;
       label.textContent = 'Tap again';
       setTimeout(() => { el.classList.remove('armed'); label.textContent = el.dataset.label; }, 2200);
@@ -48,7 +51,7 @@ export function bindPress(el, fire) {
     }
     if (el.classList.contains('armed')) {
       el.classList.remove('armed');
-      el.lastChild.textContent = el.dataset.label;
+      labelOf(el).textContent = el.dataset.label;
     }
     haptic();
     fire();
@@ -93,5 +96,4 @@ export function applyHostOS(mac) {
     else el.textContent = el.dataset.macLabel;
     if (el.dataset.label) el.dataset.label = el.dataset.macLabel; // confirm-button restore text
   });
-  $$('[data-mac-icon]').forEach((el) => { el.querySelector('i').textContent = el.dataset.macIcon; });
 }

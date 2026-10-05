@@ -221,7 +221,6 @@ function attachButtons() {
 
 export function initTrackpad() {
   attachTrackpad($('#pad'));
-  attachTrackpad($('#peek-pad'));
   attachStrip($('#strip'));
   attachButtons();
 }

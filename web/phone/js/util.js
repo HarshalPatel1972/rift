@@ -25,11 +25,12 @@ export const prefs = Object.assign(
     smart: true,
     haptics: true,
     lefty: false,
-    typePeek: true,
     quality: 'balanced',
     theme: 'auto',
-    view: 'type',
-    peekMode: 1,
+    mode: 'type',
+    lens: {},      // per-mode portal lens (protocol PEEK.*)
+    portal: {},    // per-mode portal height, as a fraction of the screen
+    portalLast: {},
     peekZoom: 45,
     name: '',
   },

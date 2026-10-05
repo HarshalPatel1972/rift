@@ -34,11 +34,11 @@ rm "$OUT/rift-arm64" "$OUT/rift-amd64"
 echo "▸ Icon"
 ICONSET="$OUT/RIFT.iconset"
 mkdir -p "$ICONSET"
-SRC=web/phone/icon-512.png
+SRC=brand/png/icon-1024.png
 for size in 16 32 128 256 512; do
   sips -z $size $size "$SRC" --out "$ICONSET/icon_${size}x${size}.png" >/dev/null
   double=$((size * 2))
-  [ $double -le 512 ] && sips -z $double $double "$SRC" --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
+  [ $double -le 1024 ] && sips -z $double $double "$SRC" --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/RIFT.icns"
 rm -rf "$ICONSET"

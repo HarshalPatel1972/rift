@@ -1,36 +1,44 @@
 <div align="center">
 
+<img src="brand/png/icon-128.png" width="96" alt="RIFT logo: a dark tile torn open, light pouring through">
+
 # rift
+
+**rift** */rɪft/* noun: a crack that splits something apart; an opening between two places.
 
 ### Your desk can wait.
 
-Type, click, scroll and peek at your PC from the couch or bed, using the phone already in your hand.<br>
+RIFT tears a private seam between your phone and your computer, so you can type, point, see your screen and wind it down from the couch or the bed.<br>
 No phone app. No account. No cloud. End-to-end encrypted.
 
-![License](https://img.shields.io/badge/license-MIT-8b6cff?style=flat-square)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-4cc9f0?style=flat-square)
-![Go](https://img.shields.io/badge/backend-Go-2ee6a8?style=flat-square)
-![E2E](https://img.shields.io/badge/encryption-end--to--end-ff6b6b?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-ff7a3d?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-ffd25e?style=flat-square)
+![E2E](https://img.shields.io/badge/encryption-end--to--end-ff3d7f?style=flat-square)
 
 </div>
 
 ---
 
-## Why RIFT exists
+## Why "rift"
 
-Sitting at a desk all day is exhausting. RIFT lets you keep working, browsing and watching **while lying back**: your phone becomes your PC's keyboard, trackpad, screen and remote. Everything is designed for one thumb, a dim room and a screen that's too far away to read.
+Sitting at a desk all day is exhausting. But the moment you lie down, your computer is **there** and you're **here**. RIFT opens a seam between the two, and the app is built around that seam:
+
+- **There:** the top of your phone is a live window into your computer. It follows your text while you type and your pointer while you move. Tap the picture to click right there.
+- **The seam:** the glowing tear between the two halves. Its light *is* the connection: steady when open, flickering on weak Wi‑Fi, ice when input is frozen, sealed when closed. Every input sends a spark through it. Drag it to resize the window; tap it to fold the window away.
+- **Here:** your hands. Your own phone keyboard (autocorrect, swipe, voice), a laptop-grade trackpad, media and wind-down controls, and shortcuts labelled with their real keys.
+
+The logo is the same idea: a dark tile torn open, with light from the other side pouring through.
 
 ## ✨ What you can do
 
 | | |
 |---|---|
-| ⌨️ **Type** | Your phone's keyboard, on your PC: autocorrect, swipe, emoji, every language and **voice dictation**. A **live preview** follows your text caret so you can see where your words land. Sticky Ctrl/Alt/Shift/Win and a key row with arrows. |
-| 🖐️ **Touch** | A laptop-grade trackpad: acceleration, tap to click, two- and three-finger taps, two-finger scroll with momentum, double-tap-and-hold to drag, a **thumb scroll strip**, and hold-able buttons. |
-| 👀 **Peek** | Too far to read the screen? See it on your phone: the whole screen, or zoomed around your **pointer** or **text caret**. **Tap on it to click there**, hold to right-click, drag to point. |
-| 🌙 **Chill** | Big media controls, seek and fullscreen, volume, and a **bedtime card**: sleep timer, screen off, lock and sleep now. |
-| ✨ **Keys** | Everyday shortcuts, browser and Windows shortcuts, a presentation remote and F1–F12. |
+| ⌨️ **Type** | Your phone's keyboard on your computer: autocorrect, swipe, emoji, any language, **voice dictation**. The live view follows your text caret. Sticky ⌃/⌥/⇧/⌘ and a key row with arrows. |
+| 🖐️ **Touch** | Acceleration, tap to click, two- and three-finger taps, two-finger scroll with momentum, double-tap-and-hold to drag, a **thumb scroll strip**, hold-able buttons. The live view follows your pointer. |
+| 🌙 **Media** | Play/pause, skip, seek, full screen, volume, and **wind down**: a sleep timer that counts down on the seam, screen off, lock, sleep. |
+| ⌘ **Keys** | Everyday, browser, system and presentation shortcuts, each showing its key combo, which turns into the Mac version on a Mac. |
 
-Plus: a story-driven first run, day and night themes, a left-handed mode, haptics, auto-reconnect, and add-to-home-screen support.
+Plus: a first-run story that explains the name, day and night themes, left-handed mode, haptics, auto-reconnect and add-to-home-screen.
 
 ## 🛡️ Private by design
 
@@ -96,6 +104,8 @@ This serves the phone app against a *pretend* PC: input is only logged, and Peek
 
 **Landing page:** `site/` is a static page, deployed to GitHub Pages by `.github/workflows/pages.yml`.
 
+**Brand:** `brand/` holds the logo source. `node brand/build-logo.mjs` regenerates the SVGs from the shared tear shape; `node brand/render.mjs` renders every PNG (app icons, favicon, menu bar template); `go run ./cmd/icongen` packs the Windows `.ico`.
+
 ## 🗺️ Roadmap
 
 - 🌍 Translations and right-to-left layouts
@@ -103,6 +113,6 @@ This serves the phone app against a *pretend* PC: input is only logged, and Peek
 
 ## 📄 License
 
-MIT. Bundles [TweetNaCl.js](https://github.com/dchest/tweetnacl-js) (public domain) and [Nunito](https://github.com/googlefonts/nunito) (SIL OFL 1.1).
+MIT. Bundles [TweetNaCl.js](https://github.com/dchest/tweetnacl-js) (public domain), [Bricolage Grotesque](https://github.com/ateliertriay/bricolage) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (both SIL OFL 1.1).
 
 <p align="center"><br>Made with 💜 by Harshal Patel</p>

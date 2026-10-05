@@ -25,7 +25,7 @@ func openWindow(url string) {
 		if path := findBrowser(b); path != "" {
 			// Going through `start` lets the new window take foreground focus
 			// (Windows refuses focus to windows spawned directly by a tray app).
-			cmd := exec.Command("cmd", "/c", "start", "", path, "--app="+url, "--window-size=460,820")
+			cmd := exec.Command("cmd", "/c", "start", "", path, "--app="+url, "--window-size=900,600")
 			cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 			if err := cmd.Start(); err == nil {
 				go cmd.Wait()

@@ -2,13 +2,13 @@
 import { $, $$, prefs, savePrefs } from './util.js';
 import { deviceName } from './link.js';
 import { applySmartTyping, editor } from './typing.js';
-import { refreshPeek } from './peek.js';
+import { refreshPortal } from './portal.js';
 
 export function applyLook() {
   document.body.dataset.theme = prefs.theme;
   document.body.classList.toggle('lefty', prefs.lefty);
   const night = prefs.theme === 'night' || (prefs.theme === 'auto' && !matchMedia('(prefers-color-scheme: light)').matches);
-  $('meta[name="theme-color"]').content = night ? '#15122b' : '#fff4e4';
+  $('meta[name="theme-color"]').content = night ? '#0f0b12' : '#f3ece2';
 }
 
 function bindRange(id, key) {
@@ -49,10 +49,9 @@ function bindSeg(groupSel, attr, key, after) {
 export function initSettings({ onForget, onReplay }) {
   const dlg = $('#settings');
   bindSeg('#theme-seg', 'data-theme-opt', 'theme', applyLook);
-  bindSeg('#quality-seg', 'data-quality', 'quality', refreshPeek);
+  bindSeg('#quality-seg', 'data-quality', 'quality', refreshPortal);
   bindRange('sens', 'sens');
   bindRange('scroll', 'scroll');
-  bindToggle('typepeek', 'typePeek', refreshPeek);
   bindToggle('natural', 'natural');
   bindToggle('smart', 'smart', applySmartTyping);
   bindToggle('lefty', 'lefty', applyLook);
