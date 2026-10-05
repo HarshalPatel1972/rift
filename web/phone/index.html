@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#15122b">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RIFT">
+<title>RIFT</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preload" href="fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+<script src="vendor/nacl-fast.min.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body data-theme="auto" data-view="type">
+
+<div class="app">
+  <header class="top">
+    <div class="logo" aria-label="RIFT">rift<span class="logo-dot"></span></div>
+    <div id="conn" class="conn" data-state="connecting" role="status">
+      <span class="conn-dot"></span>
+      <span id="conn-text">Connecting…</span>
+      <span id="conn-rtt" class="conn-rtt" hidden></span>
+    </div>
+    <button id="open-settings" class="icon-btn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7.4-2.5a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5Z"/></svg>
+    </button>
+  </header>
+
+  <div class="pills">
+    <div id="pill-paused" class="pill pill-sun" hidden>⏸ Input paused on your PC</div>
+    <button id="pill-timer" class="pill pill-coral" hidden>🌙 PC sleeps in <b id="pill-timer-left"></b></button>
+  </div>
+
+  <main>
+    <!-- TYPE -->
+    <section id="view-type" class="view" aria-label="Type">
+      <div id="type-peek" class="mini-peek" hidden>
+        <img alt="What's around your cursor on the PC">
+        <span class="mini-peek-tag">Live from your PC</span>
+      </div>
+      <div class="editor-wrap">
+        <textarea id="editor" enterkeyhint="enter" aria-label="Type to your PC"></textarea>
+        <div class="type-hint" aria-hidden="true">
+          <span class="type-hint-big">Start typing.</span>
+          <span>It lands on your PC instantly. Tap 🎤 on your keyboard to just talk.</span>
+        </div>
+      </div>
+      <div class="keyrow" id="keyrow">
+        <button class="chip mod" data-mod="1">Ctrl</button>
+        <button class="chip mod" data-mod="4">Alt</button>
+        <button class="chip mod" data-mod="2">Shift</button>
+        <button class="chip mod" data-mod="8">Win</button>
+        <span class="sep"></span>
+        <button class="chip" data-vk="27">Esc</button>
+        <button class="chip" data-vk="9">Tab</button>
+        <button class="chip" data-vk="37" data-repeat aria-label="Left">←</button>
+        <button class="chip" data-vk="38" data-repeat aria-label="Up">↑</button>
+        <button class="chip" data-vk="40" data-repeat aria-label="Down">↓</button>
+        <button class="chip" data-vk="39" data-repeat aria-label="Right">→</button>
+        <button class="chip" data-vk="36">Home</button>
+        <button class="chip" data-vk="35">End</button>
+        <button class="chip" data-vk="46" data-repeat>Del</button>
+        <button class="chip" data-vk="8" data-repeat aria-label="Backspace">⌫</button>
+        <button class="chip" data-vk="13" aria-label="Enter">⏎</button>
+      </div>
+    </section>
+
+    <!-- TOUCH -->
+    <section id="view-pad" class="view" aria-label="Trackpad">
+      <div class="pad-wrap">
+        <div id="pad" class="pad">
+          <div class="pad-hint">
+            <span class="pad-hint-emoji">👆</span>
+            <span><b>Slide</b> to move · <b>tap</b> to click</span>
+            <span><b>Two fingers</b> scroll · two-finger tap = right-click</span>
+            <span><b>Double-tap &amp; hold</b> to drag</span>
+          </div>
+        </div>
+        <div id="strip" class="strip" aria-label="Scroll strip"><span></span><span></span><span></span></div>
+      </div>
+      <div class="mouse-buttons">
+        <button data-button="0">Left</button>
+        <button data-button="2" aria-label="Middle click">•</button>
+        <button data-button="1">Right</button>
+      </div>
+    </section>
+
+    <!-- PEEK -->
+    <section id="view-peek" class="view" aria-label="Screen Peek">
+      <div class="seg" role="radiogroup" aria-label="What to show">
+        <button role="radio" data-peek="1" aria-checked="true">🖥 Whole screen</button>
+        <button role="radio" data-peek="2" aria-checked="false">🎯 Pointer</button>
+        <button role="radio" data-peek="3" aria-checked="false">✏️ Typing</button>
+      </div>
+      <div id="peek-stage" class="peek-stage">
+        <img id="peek-img" alt="Your PC screen" draggable="false">
+        <div id="peek-ring" class="peek-ring" hidden></div>
+        <div id="peek-empty" class="peek-empty">
+          <div class="peek-empty-emoji">👀</div>
+          <b>Peeking…</b>
+          <span>Your screen shows up here.</span>
+        </div>
+      </div>
+      <div class="peek-tools">
+        <span class="peek-tip">Tap = click · hold = right-click · drag = point</span>
+        <label class="zoom" id="peek-zoom-row">
+          <span aria-hidden="true">🔍</span>
+          <input type="range" id="peek-zoom" min="0" max="100" step="1" aria-label="Zoom">
+        </label>
+      </div>
+      <div id="peek-pad" class="pad pad-mini" aria-label="Mini trackpad"><span>mini trackpad</span></div>
+    </section>
+
+    <!-- CHILL -->
+    <section id="view-chill" class="view" aria-label="Media and bedtime">
+      <div class="scroll">
+        <div class="card card-media">
+          <h2>Now playing</h2>
+          <div class="media-main">
+            <button class="round" data-vk="177" aria-label="Previous">⏮</button>
+            <button class="round big" data-vk="179" aria-label="Play or pause">⏯</button>
+            <button class="round" data-vk="176" aria-label="Next">⏭</button>
+          </div>
+          <div class="media-row">
+            <button class="soft" data-vk="37" data-repeat>⏪ 5s</button>
+            <button class="soft" data-vk="70">⛶ Fullscreen</button>
+            <button class="soft" data-vk="39" data-repeat>5s ⏩</button>
+          </div>
+          <div class="volume">
+            <button class="soft" data-vk="174" data-repeat aria-label="Volume down">🔉</button>
+            <button class="soft" data-vk="173" aria-label="Mute">🔇</button>
+            <button class="soft" data-vk="175" data-repeat aria-label="Volume up">🔊</button>
+          </div>
+        </div>
+
+        <div class="card card-bed" id="bedtime">
+          <h2>Bedtime</h2>
+          <p class="card-sub" id="timer-status">Fall asleep watching? We'll put your PC to sleep.</p>
+          <div class="timer-chips">
+            <button class="tchip" data-min="15">15m</button>
+            <button class="tchip" data-min="30">30m</button>
+            <button class="tchip" data-min="45">45m</button>
+            <button class="tchip" data-min="60">1h</button>
+            <button class="tchip" data-min="90">1.5h</button>
+            <button class="tchip" data-min="120">2h</button>
+          </div>
+          <button id="timer-cancel" class="ghost" hidden>Cancel timer</button>
+          <div class="bed-actions">
+            <button class="bed" data-action="2"><span>🌑</span>Screen off</button>
+            <button class="bed" data-action="1"><span>🔒</span>Lock</button>
+            <button class="bed" data-action="3" data-confirm><span>😴</span>Sleep now</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KEYS -->
+    <section id="view-keys" class="view" aria-label="Keys and shortcuts">
+      <div class="scroll">
+        <h2>Everyday</h2>
+        <div class="grid g4">
+          <button class="key" data-vk="67" data-mods="1"><i>📋</i>Copy</button>
+          <button class="key" data-vk="86" data-mods="1"><i>📥</i>Paste</button>
+          <button class="key" data-vk="88" data-mods="1"><i>✂️</i>Cut</button>
+          <button class="key" data-vk="65" data-mods="1"><i>🔲</i>Select all</button>
+          <button class="key" data-vk="90" data-mods="1"><i>↩️</i>Undo</button>
+          <button class="key" data-vk="89" data-mods="1"><i>↪️</i>Redo</button>
+          <button class="key" data-vk="83" data-mods="1"><i>💾</i>Save</button>
+          <button class="key" data-vk="70" data-mods="1"><i>🔎</i>Find</button>
+        </div>
+
+        <h2>Browser</h2>
+        <div class="grid g4">
+          <button class="key" data-vk="84" data-mods="1"><i>➕</i>New tab</button>
+          <button class="key" data-vk="87" data-mods="1"><i>✖️</i>Close tab</button>
+          <button class="key" data-vk="84" data-mods="3"><i>♻️</i>Reopen</button>
+          <button class="key" data-vk="9" data-mods="1"><i>⇥</i>Next tab</button>
+          <button class="key" data-vk="37" data-mods="4"><i>⬅️</i>Back</button>
+          <button class="key" data-vk="116"><i>🔄</i>Refresh</button>
+          <button class="key" data-vk="187" data-mods="1"><i>🔍</i>Zoom in</button>
+          <button class="key" data-vk="189" data-mods="1"><i>🔎</i>Zoom out</button>
+        </div>
+
+        <h2>Windows</h2>
+        <div class="grid g4">
+          <button class="key" data-vk="91"><i>🪟</i>Start</button>
+          <button class="key" data-vk="9" data-mods="4"><i>🔀</i>Switch app</button>
+          <button class="key" data-vk="68" data-mods="8"><i>🏝️</i>Desktop</button>
+          <button class="key" data-vk="9" data-mods="8"><i>🗂️</i>Task view</button>
+          <button class="key" data-vk="38" data-mods="8"><i>⬆️</i>Maximize</button>
+          <button class="key" data-vk="40" data-mods="8"><i>⬇️</i>Minimize</button>
+          <button class="key" data-vk="187" data-mods="8"><i>🔬</i>Magnifier</button>
+          <button class="key danger" data-vk="115" data-mods="4" data-confirm><i>🛑</i>Close app</button>
+        </div>
+
+        <h2>Present</h2>
+        <div class="grid g2 big">
+          <button class="key" data-vk="33" data-repeat>◀ Previous</button>
+          <button class="key" data-vk="34" data-repeat>Next ▶</button>
+        </div>
+        <div class="grid g4 after">
+          <button class="key" data-vk="116"><i>▶️</i>Start</button>
+          <button class="key" data-vk="116" data-mods="2"><i>⏯</i>From here</button>
+          <button class="key" data-vk="66"><i>⬛</i>Blackout</button>
+          <button class="key" data-vk="27"><i>⏹</i>End</button>
+        </div>
+
+        <h2>Function keys</h2>
+        <div class="grid g6 fkeys">
+          <button class="key" data-vk="112">F1</button><button class="key" data-vk="113">F2</button>
+          <button class="key" data-vk="114">F3</button><button class="key" data-vk="115">F4</button>
+          <button class="key" data-vk="116">F5</button><button class="key" data-vk="117">F6</button>
+          <button class="key" data-vk="118">F7</button><button class="key" data-vk="119">F8</button>
+          <button class="key" data-vk="120">F9</button><button class="key" data-vk="121">F10</button>
+          <button class="key" data-vk="122">F11</button><button class="key" data-vk="123">F12</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="dock" aria-label="Sections">
+    <button data-view="type"><span class="dock-ico">⌨️</span><span>Type</span></button>
+    <button data-view="pad"><span class="dock-ico">🖐️</span><span>Touch</span></button>
+    <button data-view="peek"><span class="dock-ico">👀</span><span>Peek</span></button>
+    <button data-view="chill"><span class="dock-ico">🌙</span><span>Chill</span></button>
+    <button data-view="keys"><span class="dock-ico">✨</span><span>Keys</span></button>
+  </nav>
+</div>
+
+<!-- Blocking states: not paired, revoked, replaced, kicked -->
+<div id="overlay" class="overlay" hidden>
+  <div class="overlay-card">
+    <div class="overlay-art" id="overlay-art">📷</div>
+    <h1 id="overlay-title"></h1>
+    <p id="overlay-text"></p>
+    <button id="overlay-action" class="cta" hidden></button>
+  </div>
+</div>
+
+<!-- First-run story -->
+<div id="story" class="story" hidden>
+  <div class="story-track" id="story-track">
+    <article class="slide">
+      <div class="slide-art"><span>🛋️</span><span class="float">💤</span></div>
+      <h1>Your desk can wait.</h1>
+      <p>Type, click and scroll your PC from the couch, the bed — anywhere comfy.</p>
+    </article>
+    <article class="slide">
+      <div class="slide-art"><span>⌨️</span><span class="float">🎤</span></div>
+      <h1>Your keyboard. On your PC.</h1>
+      <p>Autocorrect, swipe and voice typing just work. Tap 🎤 on your keyboard and simply talk.</p>
+    </article>
+    <article class="slide">
+      <div class="slide-art"><span>👀</span><span class="float">🖥️</span></div>
+      <h1>Too far to read? Peek.</h1>
+      <p>See your screen up close on your phone — and tap right on it to click.</p>
+    </article>
+    <article class="slide">
+      <div class="slide-art"><span>🌙</span><span class="float">😴</span></div>
+      <h1>Drift off. We'll tuck it in.</h1>
+      <p>Media controls, a sleep timer and screen-off — all without getting up.</p>
+    </article>
+  </div>
+  <div class="story-foot">
+    <div class="dots" id="story-dots"><i></i><i></i><i></i><i></i></div>
+    <button id="story-skip" class="link">Skip</button>
+    <button id="story-next" class="cta">Next</button>
+  </div>
+</div>
+
+<dialog id="settings">
+  <form method="dialog">
+    <h1>Make it yours</h1>
+
+    <div class="field">
+      <span>Look</span>
+      <div class="seg small" role="radiogroup" id="theme-seg">
+        <button type="button" role="radio" data-theme-opt="auto">Auto</button>
+        <button type="button" role="radio" data-theme-opt="night">🌙 Night</button>
+        <button type="button" role="radio" data-theme-opt="day">☀️ Day</button>
+      </div>
+    </div>
+    <label class="field range">
+      <span>Pointer speed <output id="sens-out"></output></span>
+      <input type="range" id="sens" min="0.4" max="2.5" step="0.1">
+    </label>
+    <label class="field range">
+      <span>Scroll speed <output id="scroll-out"></output></span>
+      <input type="range" id="scroll" min="0.3" max="3" step="0.1">
+    </label>
+    <div class="field">
+      <span>Peek quality</span>
+      <div class="seg small" role="radiogroup" id="quality-seg">
+        <button type="button" role="radio" data-quality="saver">Data saver</button>
+        <button type="button" role="radio" data-quality="balanced">Balanced</button>
+        <button type="button" role="radio" data-quality="crisp">Crisp</button>
+      </div>
+    </div>
+    <label class="toggle"><span>Live preview while typing<small>See where your words land</small></span><input type="checkbox" id="typepeek"></label>
+    <label class="toggle"><span>Natural scrolling</span><input type="checkbox" id="natural"></label>
+    <label class="toggle"><span>Smart typing<small>Autocorrect, suggestions &amp; swipe</small></span><input type="checkbox" id="smart"></label>
+    <label class="toggle"><span>Left-handed<small>Scroll strip on the left</small></span><input type="checkbox" id="lefty"></label>
+    <label class="toggle"><span>Haptics</span><input type="checkbox" id="haptics"></label>
+    <label class="field">
+      <span>This phone's name</span>
+      <input type="text" id="device-name" maxlength="40" autocomplete="off">
+    </label>
+    <div class="dialog-actions">
+      <button type="button" id="replay-story" class="ghost">Replay intro</button>
+      <button type="button" id="forget" class="ghost danger">Forget this PC</button>
+    </div>
+    <button value="close" class="cta wide">Done</button>
+    <p class="fineprint">🔐 End-to-end encrypted. Your pairing key never leaves your devices.</p>
+  </form>
+</dialog>
+
+</body>
+</html>

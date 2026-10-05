@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>RIFT</title>
+<link rel="icon" href="/icon.png">
+<link rel="preload" href="fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<main class="shell">
+  <header class="brand">
+    <div class="logo">rift<span class="logo-dot"></span></div>
+    <div id="status" class="status" data-state="starting"><span class="status-dot"></span><span id="status-text">Starting…</span></div>
+  </header>
+
+  <!-- Waiting for a phone: the story + QR -->
+  <section id="pair" class="pair">
+    <h1 id="pair-title">Your PC,<br>from your pillow.</h1>
+    <p id="pair-sub" class="lede">Scan once. Then type, click, scroll and peek at this screen from anywhere comfy.</p>
+
+    <div class="qr-card">
+      <img id="qr" alt="Pairing QR code">
+      <span class="qr-badge">📱 scan me</span>
+    </div>
+
+    <ol class="steps">
+      <li><span>📷</span>Open your phone's camera</li>
+      <li><span>🎯</span>Point it at the code</li>
+      <li><span>🛋️</span>Lean back</li>
+    </ol>
+
+    <div class="pair-extra">
+      <button id="copy" class="linkbox" title="Copy link">
+        <span id="link" class="link"></span>
+        <span id="copy-label" class="copy">Copy link</span>
+      </button>
+      <label id="net-row" class="net" hidden>
+        <span>Network</span>
+        <select id="net"></select>
+      </label>
+      <p id="offline" class="warn-box" hidden>📡 No network found. Connect this PC to Wi‑Fi or Ethernet — your phone must be on the same network.</p>
+    </div>
+  </section>
+
+  <!-- A phone is connected -->
+  <section id="live" class="live" hidden>
+    <h1>You're free. <span class="wave">🛋️</span></h1>
+    <p class="lede">Go get comfy — <b id="device"></b> is driving now.</p>
+
+    <div id="peeking" class="peeking" hidden>
+      <span class="rec"></span> Your phone is viewing this screen
+      <button id="stop-peek" class="mini-btn">Turn off Peek</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat c-mint"><b id="rtt">—</b><span>latency</span></div>
+      <div class="stat c-grape"><b id="events">0</b><span>inputs</span></div>
+      <div class="stat c-sky"><b id="since">—</b><span>connected</span></div>
+    </div>
+
+    <div id="timer" class="timer" hidden>
+      <span>🌙 Sleeping in <b id="timer-left"></b></span>
+      <button id="timer-cancel" class="mini-btn">Cancel</button>
+    </div>
+
+    <div class="row">
+      <button id="pause" class="btn">⏸ Pause input</button>
+      <button id="disconnect" class="btn">👋 Disconnect</button>
+    </div>
+    <button id="show-qr" class="text-btn">Pair a different phone</button>
+  </section>
+
+  <div id="warning" class="warn-box" hidden></div>
+
+  <details class="more">
+    <summary>Settings</summary>
+    <label class="toggle"><span>Let my phone see this screen<small>Screen Peek — you'll always see when it's on</small></span><input type="checkbox" id="allow-peek"></label>
+    <label class="toggle"><span>Launch RIFT when Windows starts</span><input type="checkbox" id="autostart"></label>
+    <div class="more-actions">
+      <button id="rotate" class="btn small">🔑 New pairing code</button>
+      <button id="quit" class="btn small danger">Quit RIFT</button>
+    </div>
+    <p class="fine">Closing this window keeps RIFT in the tray. A new pairing code unpairs every phone. Everything is end‑to‑end encrypted and never leaves your network.</p>
+  </details>
+</main>
+</body>
+</html>

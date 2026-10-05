@@ -9,17 +9,20 @@ This will:
 ## 2. Publish to GitHub
 1. Go to your GitHub Repo: https://github.com/HarshalPatel1972/rift
 2. Click **Releases** > **Draft a new release**.
-3. **Tag version**: `v1.0.0` (or increment as needed).
-4. **Release title**: "RIFT v1.0.0 - Production Release".
+3. **Tag version**: `v2.0.0` (or increment as needed). Keep `VERSIONMAJOR/MINOR/BUILD` in `installer.nsi` in sync.
+4. **Release title**: "RIFT v2.0.0".
 5. **Description**:
    ```markdown
-   # RIFT v1.0.0
-   
-   - ✨ **Professional App Mode**: Runs as a standalone window (no browser UI).
-   - 🎨 **New Branding**: Cosmic RIFT icon.
-   - ⚡ **Auto-Cleanup**: Clean shutdown when closing the window.
-   - 🛠️ **Stability**: Removed legacy GUI dependencies.
+   # RIFT v2.0.0
+
+   - 🔒 **End-to-end encryption**: the key lives only in the QR code, and the dashboard is locked to this PC.
+   - ⌨️ **Real phone typing**: autocorrect, swipe, emoji, dictation and IME all work.
+   - 🖱️ **Trackpad gestures**: acceleration, right/middle-click taps, momentum scroll, tap-to-drag.
+   - 🎛️ **Keys panel**: media, shortcuts, presentation remote, F-keys.
+   - 💎 **Tray app**: live latency, pause, revoke, launch at startup, auto-reconnect.
    ```
+
+   The CI workflow also builds `rift.exe` and `RIFT_Setup.exe` on every push; download them from the run's artifacts.
 6. **Attach binaries**: Drag and drop `RIFT_Setup.exe` and `rift.exe` into the upload box.
 7. Click **Publish release**.
 
