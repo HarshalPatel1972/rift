@@ -19,6 +19,22 @@
     <div id="status" class="status" data-state="starting"><span class="status-dot"></span><span id="status-text">Starting…</span></div>
   </header>
 
+  <!-- macOS: grant permissions first -->
+  <section id="perms" class="perms" hidden>
+    <h2>Two quick switches 🔑</h2>
+    <p class="perms-sub">macOS asks before any app can type or show your screen. Flip RIFT on in System Settings — this updates by itself.</p>
+    <div class="perm" data-kind="input">
+      <span class="perm-ico">⌨️</span>
+      <div><b>Accessibility</b><small>So your phone can type and click</small></div>
+      <button class="mini-btn">Allow</button>
+    </div>
+    <div class="perm" data-kind="screen">
+      <span class="perm-ico">👀</span>
+      <div><b>Screen Recording</b><small>Only for Peek — skip it if you like</small></div>
+      <button class="mini-btn">Allow</button>
+    </div>
+  </section>
+
   <!-- Waiting for a phone: the story + QR -->
   <section id="pair" class="pair">
     <h1 id="pair-title">Your PC,<br>from your pillow.</h1>
@@ -81,7 +97,7 @@
   <details class="more">
     <summary>Settings</summary>
     <label class="toggle"><span>Let my phone see this screen<small>Screen Peek — you'll always see when it's on</small></span><input type="checkbox" id="allow-peek"></label>
-    <label class="toggle"><span>Launch RIFT when Windows starts</span><input type="checkbox" id="autostart"></label>
+    <label class="toggle"><span>Launch RIFT when you log in</span><input type="checkbox" id="autostart"></label>
     <div class="more-actions">
       <button id="rotate" class="btn small">🔑 New pairing code</button>
       <button id="quit" class="btn small danger">Quit RIFT</button>

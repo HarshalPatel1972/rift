@@ -43,6 +43,10 @@ type Host struct {
 	Input  injector.Injector
 	Screen func() screen.Capturer // one capturer per session
 	Power  power.Controller
+	// Mac makes the phone label modifiers ⌘ ⌥ ⌃ and use Mac shortcuts.
+	Mac bool
+	// BlockedHint explains, in the dashboard, why input injection failed.
+	BlockedHint string
 }
 
 // Status is a snapshot of the connection for the desktop dashboard.
@@ -267,6 +271,9 @@ func (s *Server) flagsLocked() byte {
 	if s.host.Power != nil {
 		f |= protocol.FlagPower
 	}
+	if s.host.Mac {
+		f |= protocol.FlagMac
+	}
 	return f
 }
 
@@ -482,7 +489,10 @@ func (s *Server) dispatch(sess *session, op byte, p []byte) {
 
 	warning := ""
 	if err != nil {
-		warning = "Input blocked — the focused window is probably running as administrator. Run RIFT as administrator to control it."
+		warning = s.host.BlockedHint
+		if warning == "" {
+			warning = "Your computer blocked RIFT's input."
+		}
 	}
 	s.update(func(st *Status) {
 		st.Activity++

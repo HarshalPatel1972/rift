@@ -15,7 +15,7 @@ export const OP = {
   ACTION: 8, PEEK: 9, ACK: 10, POINT: 11,
   WELCOME: 0x81, PING: 0x82, FRAME: 0x83,
 };
-export const FLAG = { PAUSED: 1, PEEK: 2, POWER: 4 };
+export const FLAG = { PAUSED: 1, PEEK: 2, POWER: 4, MAC: 8 };
 export const BTN = { UP: 0, DOWN: 1, CLICK: 2 };
 export const PEEK = { OFF: 0, SCREEN: 1, CURSOR: 2, CARET: 3 };
 export const ACTION = { LOCK: 1, DISPLAY_OFF: 2, SLEEP: 3, SLEEP_TIMER: 4 };

@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/HarshalPatel1972/rift/internal/config"
@@ -64,10 +65,13 @@ func main() {
 	phonePort := phoneLn.Addr().(*net.TCPAddr).Port
 
 	hostName, _ := os.Hostname()
+	hostName = strings.TrimSuffix(hostName, ".local") // macOS Bonjour names
 	srv := server.New(server.Host{
-		Input:  injector.New(),
-		Screen: screen.New,
-		Power:  power.New(),
+		Input:       injector.New(),
+		Screen:      screen.New,
+		Power:       power.New(),
+		Mac:         isMac,
+		BlockedHint: blockedHint,
 	}, key, web.Phone, web.Icon, hostName)
 	settings := config.LoadSettings()
 	srv.SetPeekAllowed(settings.PeekAllowed)

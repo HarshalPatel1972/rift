@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build !windows && !darwin
 
 package main
 
@@ -8,6 +8,11 @@ import (
 )
 
 // RIFT targets Windows; these stubs only keep the package building elsewhere.
+
+const (
+	isMac       = false
+	blockedHint = ""
+)
 
 func openWindow(url string) { log.Printf("open %s", url) }
 

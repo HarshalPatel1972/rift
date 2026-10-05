@@ -16,6 +16,7 @@ import (
 
 	"github.com/HarshalPatel1972/rift/internal/config"
 	"github.com/HarshalPatel1972/rift/internal/netinfo"
+	"github.com/HarshalPatel1972/rift/internal/perms"
 	"github.com/HarshalPatel1972/rift/internal/server"
 	"github.com/HarshalPatel1972/rift/web"
 )
@@ -52,6 +53,20 @@ func (d *dashboard) handler() http.Handler {
 	mux.HandleFunc("GET /api/settings", d.auth(d.settingsAPI))
 	mux.HandleFunc("POST /api/settings", d.auth(d.settingsAPI))
 	mux.HandleFunc("POST /api/sleep", d.auth(d.sleep))
+	mux.HandleFunc("GET /api/permissions", d.auth(func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, perms.Check())
+	}))
+	mux.HandleFunc("POST /api/permissions", d.auth(func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ Kind string }
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := perms.Request(body.Kind); err != nil {
+			log.Printf("permissions: %v", err)
+		}
+		writeJSON(w, perms.Check())
+	}))
 	mux.HandleFunc("GET /api/autostart", d.auth(d.autostart))
 	mux.HandleFunc("POST /api/autostart", d.auth(d.autostart))
 	mux.HandleFunc("POST /api/quit", d.auth(func(w http.ResponseWriter, r *http.Request) {

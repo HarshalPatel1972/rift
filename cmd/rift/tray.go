@@ -1,9 +1,8 @@
-//go:build windows
+//go:build windows || (darwin && cgo)
 
 package main
 
 import (
-	_ "embed"
 	"fmt"
 
 	"fyne.io/systray"
@@ -11,15 +10,12 @@ import (
 	"github.com/HarshalPatel1972/rift/internal/server"
 )
 
-//go:embed rift.ico
-var trayIcon []byte
-
 // runTray keeps RIFT alive in the notification area after the window closes.
 // Left-click opens the dashboard; right-click shows the menu. Blocks until
 // Quit, then runs onExit.
 func runTray(srv *server.Server, open func(), onExit func()) {
 	systray.Run(func() {
-		systray.SetIcon(trayIcon)
+		setTrayIcon()
 		systray.SetTitle("RIFT")
 		systray.SetOnTapped(open)
 

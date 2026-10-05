@@ -6,7 +6,7 @@
  *   otherwise → off (saves battery and bandwidth)
  * Frames are flow-controlled: we ack each one after it's decoded and shown.
  */
-import { $, $$, haptic, prefs, savePrefs } from './util.js';
+import { $, $$, haptic, pc, prefs, savePrefs } from './util.js';
 import { FLAG, PEEK, link, sendAck, sendPeek, sendPoint } from './link.js';
 
 const QUALITY_CAP = { saver: 720, balanced: 1280, crisp: 1920 };
@@ -70,10 +70,10 @@ function renderEmpty() {
     stageImg.hidden = true;
     ring.hidden = true;
     $('.peek-empty-emoji', empty).textContent = link.ready ? '🙈' : '🔌';
-    $('b', empty).textContent = link.ready ? 'Peek is off on your PC' : 'Not connected';
-    $('span', empty).textContent = link.ready
+    $('b', empty).textContent = link.ready ? pc('Peek is off on your PC') : 'Not connected';
+    $('span', empty).textContent = pc(link.ready
       ? 'Turn on "Let my phone see this screen" in RIFT on your PC.'
-      : 'Waiting for your PC…';
+      : 'Waiting for your PC…');
   } else if (!stageImg.src) {
     empty.hidden = false;
     $('.peek-empty-emoji', empty).textContent = '👀';

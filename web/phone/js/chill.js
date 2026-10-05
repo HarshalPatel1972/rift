@@ -1,5 +1,5 @@
 // Chill: media + bedtime (sleep timer, screen off, lock, sleep).
-import { $, $$, haptic } from './util.js';
+import { $, $$, haptic, pc } from './util.js';
 import { ACTION, FLAG, link, sendAction } from './link.js';
 import { bindPress } from './press.js';
 
@@ -20,9 +20,9 @@ function render() {
   $('#timer-cancel').hidden = !left;
   if (left) {
     $('#pill-timer-left').textContent = fmt(left);
-    status.replaceChildren('Your PC goes to sleep in ', Object.assign(document.createElement('b'), { textContent: fmt(left) }), '. Sweet dreams.');
+    status.replaceChildren(pc('Your PC goes to sleep in '), Object.assign(document.createElement('b'), { textContent: fmt(left) }), '. Sweet dreams.');
   } else {
-    status.textContent = "Fall asleep watching? We'll put your PC to sleep.";
+    status.textContent = pc("Fall asleep watching? We'll put your PC to sleep.");
     $$('.tchip').forEach((c) => c.classList.remove('on'));
   }
 }

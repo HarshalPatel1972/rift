@@ -79,6 +79,8 @@ h1 { margin: 18px 0; font-size: clamp(56px, 9vw, 104px); line-height: 0.92; font
 }
 .cta:hover { transform: translateY(-2px); }
 .cta:active { transform: translateY(4px); box-shadow: 0 2px 0 #5a3fc7; }
+.cta.ghost { background: var(--surface); box-shadow: 0 6px 0 #110e24; }
+.cta.ghost:active { box-shadow: 0 2px 0 #110e24; }
 .soon { color: var(--muted); font-weight: 800; }
 .tiny { color: var(--faint); font-size: 14px; }
 

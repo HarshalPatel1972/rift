@@ -8,7 +8,7 @@ Type, click, scroll and peek at your PC from the couch or bed, using the phone a
 No phone app. No account. No cloud. End-to-end encrypted.
 
 ![License](https://img.shields.io/badge/license-MIT-8b6cff?style=flat-square)
-![Platform](https://img.shields.io/badge/platform-Windows-4cc9f0?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-4cc9f0?style=flat-square)
 ![Go](https://img.shields.io/badge/backend-Go-2ee6a8?style=flat-square)
 ![E2E](https://img.shields.io/badge/encryption-end--to--end-ff6b6b?style=flat-square)
 
@@ -42,11 +42,13 @@ Plus: a story-driven first run, day and night themes, a left-handed mode, haptic
 
 ## 🚀 Getting started
 
-1. Download **RIFT_Setup.exe** from [Releases](https://github.com/HarshalPatel1972/rift/releases) and run it.
+1. Download from [Releases](https://github.com/HarshalPatel1972/rift/releases): **RIFT_Setup.exe** (Windows) or **RIFT.dmg** (macOS 11+, drag RIFT to Applications).
 2. Open RIFT. Scan the QR code with your phone's camera (same Wi-Fi).
 3. Lean back. 🛋️
 
-> **Admin windows:** Windows blocks input to apps running as administrator. RIFT warns you when this happens; run RIFT as administrator to control them.
+> **macOS:** the first time, RIFT asks for two switches in System Settings → Privacy & Security: **Accessibility** (to type and click) and **Screen Recording** (only for Peek, which needs macOS 14+). The RIFT window walks you through both and updates live. RIFT lives in the menu bar. On a Mac, your phone shows ⌘ ⌥ ⌃ and Mac shortcuts (Spotlight, Mission Control…).
+
+> **Windows admin apps:** Windows blocks input to apps running as administrator. RIFT warns you when this happens; run RIFT as administrator to control them.
 
 ## 🛠️ Architecture
 
@@ -69,12 +71,20 @@ The wire protocol is documented in [`internal/protocol/protocol.go`](internal/pr
 
 ## 📦 Building from source
 
-Requirements: **Go 1.26+**. [NSIS](https://nsis.sourceforge.io/) is needed only for the installer.
+Requirements: **Go 1.26+**.
 
+**Windows** (pure Go, no C toolchain; [NSIS](https://nsis.sourceforge.io/) only for the installer):
 ```powershell
 ./build.bat      # tests + rift.exe
 ./release.bat    # + RIFT_Setup.exe
 ```
+
+**macOS** (needs Xcode Command Line Tools, since the host uses cgo):
+```bash
+scripts/macos/build-app.sh                     # universal RIFT.app + RIFT.dmg, ad-hoc signed
+SIGN_IDENTITY="Developer ID Application: …" NOTARY_PROFILE=rift scripts/macos/build-app.sh # signed + notarized, for distribution
+```
+Permissions are tied to the app's signature, so ship with a Developer ID; ad-hoc builds need permissions re-granted after every rebuild.
 
 **Develop the phone UI without touching your PC:**
 ```powershell
@@ -88,7 +98,6 @@ This serves the phone app against a *pretend* PC: input is only logged, and Peek
 
 ## 🗺️ Roadmap
 
-- 🍎 macOS host (input, screen capture, tray, permission onboarding)
 - 🌍 Translations and right-to-left layouts
 - 🔒 HTTPS on the LAN, which unlocks wake-lock, an installable app and the gyroscope "air mouse"
 

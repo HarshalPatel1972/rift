@@ -149,6 +149,7 @@ func (c *fakeCapturer) Grab(req screen.Request) (*screen.Frame, error) {
 
 func main() {
 	port := flag.Int("port", 8090, "listen port")
+	mac := flag.Bool("mac", false, "pretend to be a Mac (⌘ labels, Mac shortcuts)")
 	flag.Parse()
 
 	pc := &fakePC{x: 600, y: 400}
@@ -157,6 +158,7 @@ func main() {
 		Input:  pc,
 		Screen: func() screen.Capturer { return &fakeCapturer{pc: pc} },
 		Power:  pc,
+		Mac:    *mac,
 	}, key, web.Phone, web.Icon, "riftdev")
 	k := base64.RawURLEncoding.EncodeToString(key)
 	fmt.Printf("local:  http://localhost:%d/#k=%s\n", *port, k)

@@ -2,7 +2,7 @@ name: Build RIFT
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'feature/**' ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
@@ -13,8 +13,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # The app targets Windows; Linux keeps the platform-neutral core honest.
-        os: [windows-latest, ubuntu-latest]
+        # Windows and macOS are the shipped hosts (macOS is the only place
+        # the cgo/Objective-C code compiles); Linux keeps the core portable.
+        os: [windows-latest, macos-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -56,3 +57,19 @@ jobs:
           path: |
             rift.exe
             RIFT_Setup.exe
+
+  build-macos:
+    name: Build macOS app
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build RIFT.app and RIFT.dmg
+        run: bash scripts/macos/build-app.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rift-macos
+          path: build/macos/RIFT.dmg

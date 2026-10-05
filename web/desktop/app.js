@@ -261,6 +261,36 @@ autostart.addEventListener('change', async () => {
 setInterval(() => { if (!live) loadPairing(); }, 15000);
 addEventListener('focus', loadPairing);
 
+/* ------------------------------------------- macOS permission checklist */
+
+let isMac = false;
+const macify = (t) => (isMac ? t.replace(/\bPC\b/g, 'Mac') : t);
+
+async function checkPerms() {
+  let p;
+  try { p = await api('/api/permissions'); } catch { return; }
+  if (p.required && !isMac) {
+    // Only macOS asks for permissions, so this is a Mac: say so in the copy.
+    isMac = true;
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) n.nodeValue = macify(n.nodeValue);
+  }
+  const box = $('#perms');
+  box.hidden = !p.required || (p.input && p.screen);
+  for (const row of box.querySelectorAll('.perm')) {
+    const ok = p[row.dataset.kind];
+    row.classList.toggle('ok', ok);
+    row.querySelector('button').textContent = ok ? '✓ On' : 'Allow';
+  }
+  // Keep checking while something is missing: the user flips it in Settings.
+  if (p.required && !(p.input && p.screen)) setTimeout(checkPerms, 1500);
+}
+for (const row of document.querySelectorAll('.perm')) {
+  row.querySelector('button').addEventListener('click', () =>
+    api('/api/permissions', { method: 'POST', body: { kind: row.dataset.kind } }).then(checkPerms).catch(() => {}));
+}
+checkPerms();
+
 api('/api/settings').then((s) => {
   settings = s;
   allowPeek.checked = s.peekAllowed;

@@ -53,10 +53,10 @@
         </div>
       </div>
       <div class="keyrow" id="keyrow">
-        <button class="chip mod" data-mod="1">Ctrl</button>
-        <button class="chip mod" data-mod="4">Alt</button>
-        <button class="chip mod" data-mod="2">Shift</button>
-        <button class="chip mod" data-mod="8">Win</button>
+        <button class="chip mod" data-mod="1" data-mac-label="⌘">Ctrl</button>
+        <button class="chip mod" data-mod="4" data-mac-label="⌥">Alt</button>
+        <button class="chip mod" data-mod="2" data-mac-label="⇧">Shift</button>
+        <button class="chip mod" data-mod="8" data-mac-label="⌃">Win</button>
         <span class="sep"></span>
         <button class="chip" data-vk="27">Esc</button>
         <button class="chip" data-vk="9">Tab</button>
@@ -171,7 +171,7 @@
           <button class="key" data-vk="88" data-mods="1"><i>✂️</i>Cut</button>
           <button class="key" data-vk="65" data-mods="1"><i>🔲</i>Select all</button>
           <button class="key" data-vk="90" data-mods="1"><i>↩️</i>Undo</button>
-          <button class="key" data-vk="89" data-mods="1"><i>↪️</i>Redo</button>
+          <button class="key" data-vk="89" data-mods="1" data-mac="90,3"><i>↪️</i>Redo</button>
           <button class="key" data-vk="83" data-mods="1"><i>💾</i>Save</button>
           <button class="key" data-vk="70" data-mods="1"><i>🔎</i>Find</button>
         </div>
@@ -181,23 +181,23 @@
           <button class="key" data-vk="84" data-mods="1"><i>➕</i>New tab</button>
           <button class="key" data-vk="87" data-mods="1"><i>✖️</i>Close tab</button>
           <button class="key" data-vk="84" data-mods="3"><i>♻️</i>Reopen</button>
-          <button class="key" data-vk="9" data-mods="1"><i>⇥</i>Next tab</button>
-          <button class="key" data-vk="37" data-mods="4"><i>⬅️</i>Back</button>
-          <button class="key" data-vk="116"><i>🔄</i>Refresh</button>
+          <button class="key" data-vk="9" data-mods="1" data-mac="9,8"><i>⇥</i>Next tab</button>
+          <button class="key" data-vk="37" data-mods="4" data-mac="219,1"><i>⬅️</i>Back</button>
+          <button class="key" data-vk="116" data-mac="82,1"><i>🔄</i>Refresh</button>
           <button class="key" data-vk="187" data-mods="1"><i>🔍</i>Zoom in</button>
           <button class="key" data-vk="189" data-mods="1"><i>🔎</i>Zoom out</button>
         </div>
 
-        <h2>Windows</h2>
+        <h2 data-mac-label="Mac">Windows</h2>
         <div class="grid g4">
-          <button class="key" data-vk="91"><i>🪟</i>Start</button>
-          <button class="key" data-vk="9" data-mods="4"><i>🔀</i>Switch app</button>
-          <button class="key" data-vk="68" data-mods="8"><i>🏝️</i>Desktop</button>
-          <button class="key" data-vk="9" data-mods="8"><i>🗂️</i>Task view</button>
-          <button class="key" data-vk="38" data-mods="8"><i>⬆️</i>Maximize</button>
-          <button class="key" data-vk="40" data-mods="8"><i>⬇️</i>Minimize</button>
-          <button class="key" data-vk="187" data-mods="8"><i>🔬</i>Magnifier</button>
-          <button class="key danger" data-vk="115" data-mods="4" data-confirm><i>🛑</i>Close app</button>
+          <button class="key" data-vk="91" data-mac="32,1" data-mac-label="Spotlight" data-mac-icon="🔍"><i>🪟</i>Start</button>
+          <button class="key" data-vk="9" data-mods="4" data-mac="9,1"><i>🔀</i>Switch app</button>
+          <button class="key" data-vk="68" data-mods="8" data-mac="122,0"><i>🏝️</i>Desktop</button>
+          <button class="key" data-vk="9" data-mods="8" data-mac="38,8" data-mac-label="Mission Ctrl"><i>🗂️</i>Task view</button>
+          <button class="key" data-vk="38" data-mods="8" data-mac="70,9" data-mac-label="Full screen"><i>⬆️</i>Maximize</button>
+          <button class="key" data-vk="40" data-mods="8" data-mac="77,1"><i>⬇️</i>Minimize</button>
+          <button class="key" data-vk="187" data-mods="8" data-mac="56,5" data-mac-label="Zoom"><i>🔬</i>Magnifier</button>
+          <button class="key danger" data-vk="115" data-mods="4" data-mac="81,1" data-mac-label="Quit app" data-confirm><i>🛑</i>Close app</button>
         </div>
 
         <h2>Present</h2>
@@ -206,8 +206,8 @@
           <button class="key" data-vk="34" data-repeat>Next ▶</button>
         </div>
         <div class="grid g4 after">
-          <button class="key" data-vk="116"><i>▶️</i>Start</button>
-          <button class="key" data-vk="116" data-mods="2"><i>⏯</i>From here</button>
+          <button class="key" data-vk="116" data-mac="13,3"><i>▶️</i>Start</button>
+          <button class="key" data-vk="116" data-mods="2" data-mac="13,1"><i>⏯</i>From here</button>
           <button class="key" data-vk="66"><i>⬛</i>Blackout</button>
           <button class="key" data-vk="27"><i>⏹</i>End</button>
         </div>

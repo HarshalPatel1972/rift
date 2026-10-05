@@ -1,7 +1,7 @@
 // RIFT phone app: wiring, views and connection states.
-import { $, $$, haptic, prefs, savePrefs } from './util.js';
+import { $, $$, haptic, pc, prefs, savePrefs } from './util.js';
 import { FLAG, connect, forgetPairing, hasKey, link, loadPairingKey, resume, useKey } from './link.js';
-import { bindKeys } from './press.js';
+import { applyHostOS, bindKeys } from './press.js';
 import { clearMods, editor, initTyping, latchedMods } from './typing.js';
 import { initTrackpad } from './trackpad.js';
 import { initPeek, peekState, setPeekView } from './peek.js';
@@ -67,6 +67,7 @@ link.on('ping', ({ rtt, flags }) => {
     el.className = 'conn-rtt' + (rtt > 120 ? ' bad' : rtt > 40 ? ' warn' : '');
   }
   $('#pill-paused').hidden = !(flags & FLAG.PAUSED);
+  applyHostOS(!!(flags & FLAG.MAC));
 });
 
 /* -------------------------------------------------------------- overlay */
@@ -99,8 +100,8 @@ const OVERLAYS = {
 function showOverlay(kind) {
   const o = OVERLAYS[kind];
   $('#overlay-art').textContent = o.art;
-  $('#overlay-title').textContent = o.title;
-  $('#overlay-text').textContent = o.text;
+  $('#overlay-title').textContent = pc(o.title);
+  $('#overlay-text').textContent = pc(o.text);
   const btn = $('#overlay-action');
   btn.hidden = !o.action;
   btn.textContent = o.action || '';

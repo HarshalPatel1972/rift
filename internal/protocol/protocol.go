@@ -66,6 +66,7 @@ const (
 	FlagPaused byte = 1 << 0
 	FlagPeek   byte = 1 << 1 // host supports Screen Peek
 	FlagPower  byte = 1 << 2 // host supports power actions
+	FlagMac    byte = 1 << 3 // host is a Mac: the phone shows ⌘ ⌥ ⌃ and Mac shortcuts
 )
 
 // Actions for OpAction.

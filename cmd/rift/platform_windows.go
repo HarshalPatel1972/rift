@@ -12,7 +12,11 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-const runKey = `Software\Microsoft\Windows\CurrentVersion\Run`
+const (
+	runKey      = `Software\Microsoft\Windows\CurrentVersion\Run`
+	isMac       = false
+	blockedHint = "Input blocked — the focused window is probably running as administrator. Run RIFT as administrator to control it."
+)
 
 // openWindow shows the dashboard as a chromeless Edge/Chrome app window,
 // falling back to the default browser.

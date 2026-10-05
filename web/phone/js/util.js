@@ -49,6 +49,10 @@ export function concat(...parts) {
   return out;
 }
 
+/** What to call the computer: "PC", or "Mac" once a Mac host says hello. */
+export const host = { mac: false };
+export const pc = (text) => (host.mac ? text.replace(/\bPC\b/g, 'Mac') : text);
+
 /** Tiny event emitter. */
 export function emitter() {
   const handlers = {};

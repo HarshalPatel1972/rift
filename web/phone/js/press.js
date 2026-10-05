@@ -1,5 +1,5 @@
 // Buttons that behave like real keys: tap on release, hold to repeat.
-import { $$, haptic } from './util.js';
+import { $$, haptic, host, pc } from './util.js';
 import { sendKey } from './link.js';
 
 // Keep the soft keyboard up: a button press must not steal focus.
@@ -60,11 +60,38 @@ export function bindPress(el, fire) {
 /** Wires every [data-vk] button. getMods supplies latched modifiers. */
 export function bindKeys(getMods, afterKey) {
   $$('[data-vk]').forEach((el) => {
-    const vk = Number(el.dataset.vk);
-    const fixed = Number(el.dataset.mods || 0);
+    // Read at press time: applyHostOS may remap keys for a Mac.
     bindPress(el, () => {
-      sendKey(vk, fixed | getMods(el));
+      sendKey(Number(el.dataset.vk), Number(el.dataset.mods || 0) | getMods(el));
       afterKey(el);
     });
   });
+}
+
+let macApplied = false;
+
+/** Swaps labels and shortcuts to their Mac equivalents (data-mac="vk,mods",
+ * data-mac-label, data-mac-icon). The server maps Ctrl→⌘, Alt→⌥, Win→⌃. */
+export function applyHostOS(mac) {
+  if (!mac || macApplied) return;
+  macApplied = true;
+  host.mac = true;
+  document.body.classList.add('host-mac');
+  // Static copy: "PC" → "Mac" everywhere it appears as a word.
+  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    if (/\bPC\b/.test(n.nodeValue)) n.nodeValue = pc(n.nodeValue);
+  }
+  $$('[data-mac]').forEach((el) => {
+    const [vk, mods] = el.dataset.mac.split(',');
+    el.dataset.vk = vk;
+    el.dataset.mods = mods;
+  });
+  $$('[data-mac-label]').forEach((el) => {
+    const last = el.lastChild;
+    if (last && last.nodeType === Node.TEXT_NODE) last.textContent = el.dataset.macLabel;
+    else el.textContent = el.dataset.macLabel;
+    if (el.dataset.label) el.dataset.label = el.dataset.macLabel; // confirm-button restore text
+  });
+  $$('[data-mac-icon]').forEach((el) => { el.querySelector('i').textContent = el.dataset.macIcon; });
 }

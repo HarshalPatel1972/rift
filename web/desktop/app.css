@@ -170,6 +170,18 @@ h1 { font-size: 40px; line-height: 1.02; font-weight: 1000; letter-spacing: -0.0
   font-size: 13px;
 }
 
+/* --- macOS permissions --- */
+.perms { margin-bottom: 22px; padding: 18px; border-radius: 26px; background: var(--surface); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sun) 45%, transparent); }
+.perms h2 { font-size: 21px; font-weight: 1000; margin-bottom: 4px; }
+.perms-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 12px; }
+.perm { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 2px solid var(--line); }
+.perm-ico { font-size: 24px; }
+.perm div { flex: 1; }
+.perm b { display: block; }
+.perm small { color: var(--muted); font-size: 12.5px; }
+.perm .mini-btn { background: var(--grape); color: #fff; }
+.perm.ok .mini-btn { background: none; color: var(--mint); pointer-events: none; }
+
 /* --- connected --- */
 .wave { display: inline-block; animation: wave 2.4s infinite; transform-origin: 70% 80%; }
 @keyframes wave { 0%, 60%, 100% { transform: rotate(0); } 70% { transform: rotate(-12deg); } 85% { transform: rotate(10deg); } }
